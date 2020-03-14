@@ -79,7 +79,7 @@ findM xs0 def p =
             return x
 
 isFailure :: NodeT m (Maybe (Either x a, b)) -> Bool
-isFailure = \case
+isFailure = case _ of
   NodeT (Just (Left _, _)) _ ->
     True
   _ ->
@@ -111,7 +111,7 @@ takeSmallest ::
   -> (Progress -> m ())
   -> NodeT m (Maybe (Either Failure (), Journal))
   -> m Result
-takeSmallest size seed shrinks slimit retries updateUI = \case
+takeSmallest size seed shrinks slimit retries updateUI = case _ of
   NodeT Nothing _ ->
     pure GaveUp
 

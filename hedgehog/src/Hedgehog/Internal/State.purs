@@ -283,7 +283,7 @@ callbackRequire1 ::
   -> input Symbolic
   -> Callback input output state
   -> Bool
-callbackRequire1 s i = \case
+callbackRequire1 s i = case _ of
   Require f ->
     f s i
   Update _ ->
@@ -298,7 +298,7 @@ callbackUpdate1 ::
   -> Var output v
   -> Callback input output state
   -> state v
-callbackUpdate1 s i o = \case
+callbackUpdate1 s i o = case _ of
   Require _ ->
     s
   Update f ->
@@ -313,7 +313,7 @@ callbackEnsure1 ::
   -> output
   -> Callback input output state
   -> Test ()
-callbackEnsure1 s0 s i o = \case
+callbackEnsure1 s0 s i o = case _ of
   Require _ ->
     success
   Update _ ->
@@ -594,7 +594,7 @@ renderActionResult env (Action _ output@(Symbolic (Name name)) _ _ _ _) =
     prefix =
       replicate (length prefix0) ' '
 
-    unfound = \case
+    unfound = case _ of
       EnvironmentValueNotFound _
         -> "<<not found in environment>>"
       EnvironmentTypeError _ _
@@ -768,7 +768,7 @@ interleave xs00 ys00 =
       [ y : zs | zs <- interleave xs0 ys ]
 
 checkActions :: state Concrete -> [ActionCheck state] -> Test ()
-checkActions s0 = \case
+checkActions s0 = case _ of
   [] ->
     pure ()
   x : xs -> do

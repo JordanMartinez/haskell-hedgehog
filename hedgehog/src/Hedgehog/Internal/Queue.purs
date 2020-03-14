@@ -38,7 +38,7 @@ dequeueMVar ::
   -> (TasksRemaining -> TaskIndex -> a -> IO b)
   -> IO (Maybe (TaskIndex, b))
 dequeueMVar mvar start =
-  MVar.modifyMVar mvar $ \case
+  MVar.modifyMVar mvar $ case _ of
     [] ->
       pure ([], Nothing)
     (ix, x) : xs -> do

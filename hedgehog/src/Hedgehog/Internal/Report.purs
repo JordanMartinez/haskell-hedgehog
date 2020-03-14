@@ -144,7 +144,7 @@ instance Semigroup Summary where
 -- | Construct a summary from a single result.
 --
 fromResult :: Result -> Summary
-fromResult = \case
+fromResult = case _ of
   Failed _ ->
     mempty { summaryFailed = 1 }
   GaveUp ->
@@ -237,14 +237,14 @@ instance Semigroup Style where
 ------------------------------------------------------------------------
 
 takeAnnotation :: Log -> Maybe FailedAnnotation
-takeAnnotation = \case
+takeAnnotation = case _ of
   Annotation loc val ->
     Just $ FailedAnnotation loc val
   _ ->
     Nothing
 
 takeFootnote :: Log -> Maybe String
-takeFootnote = \case
+takeFootnote = case _ of
   Footnote x ->
     Just x
   _ ->
@@ -290,21 +290,21 @@ icon m i x =
   markup m (WL.char i) <+> x
 
 ppTestCount :: TestCount -> Doc a
-ppTestCount = \case
+ppTestCount = case _ of
   TestCount 1 ->
     "1 test"
   TestCount n ->
     ppShow n <+> "tests"
 
 ppDiscardCount :: DiscardCount -> Doc a
-ppDiscardCount = \case
+ppDiscardCount = case _ of
   DiscardCount 1 ->
     "1 discard"
   DiscardCount n ->
     ppShow n <+> "discards"
 
 ppShrinkCount :: ShrinkCount -> Doc a
-ppShrinkCount = \case
+ppShrinkCount = case _ of
   ShrinkCount 1 ->
     "1 shrink"
   ShrinkCount n ->
@@ -315,7 +315,7 @@ ppRawPropertyCount (PropertyCount n) =
   ppShow n
 
 ppWithDiscardCount :: DiscardCount -> Doc Markup
-ppWithDiscardCount = \case
+ppWithDiscardCount = case _ of
   DiscardCount 0 ->
     mempty
   n ->
@@ -456,7 +456,7 @@ ppFailedInput ix input = do
       pure $ Right decl
 
 ppLineDiff :: LineDiff -> Doc Markup
-ppLineDiff = \case
+ppLineDiff = case _ of
   LineSame x ->
     markup DiffSame $
       "  " <> WL.text x
@@ -680,7 +680,7 @@ ppFailureReport name tests (FailureReport size seed _ mcoverage inputs0 mlocatio
     ]
 
 ppName :: Maybe PropertyName -> Doc a
-ppName = \case
+ppName = case _ of
   Nothing ->
     "<interactive>"
   Just (PropertyName name) ->
@@ -749,7 +749,7 @@ ppResult name (Report tests discards coverage result) = do
         ppCoverage tests coverage
 
 ppFailedAtLocation :: Maybe Span -> Doc Markup
-ppFailedAtLocation = \case
+ppFailedAtLocation = case _ of
   Just x ->
     "at" <+>
     WL.text (spanFile x) <> ":" <>
@@ -1070,7 +1070,7 @@ renderDoc color doc = do
     bold =
       SetConsoleIntensity BoldIntensity
 
-    start = \case
+    start = case _ of
       WaitingIcon ->
         setSGRCode []
       WaitingHeader ->

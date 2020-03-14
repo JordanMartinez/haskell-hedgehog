@@ -59,7 +59,7 @@ renderValueDiff =
   toLineDiff
 
 renderLineDiff :: LineDiff -> String
-renderLineDiff = \case
+renderLineDiff = case _ of
   LineSame x ->
     "  " ++ x
   LineRemoved x ->
@@ -121,7 +121,7 @@ valueDiff x y =
         ValueDiff x y
 
 takeLeft :: ValueDiff -> Value
-takeLeft = \case
+takeLeft = case _ of
   ValueCon n xs ->
     Con n (fmap takeLeft xs)
   ValueRec n nxs ->
@@ -136,7 +136,7 @@ takeLeft = \case
     x
 
 takeRight :: ValueDiff -> Value
-takeRight = \case
+takeRight = case _ of
   ValueCon n xs ->
     Con n (fmap takeRight xs)
   ValueRec n nxs ->
@@ -192,7 +192,7 @@ spaces indent =
   replicate indent ' '
 
 collapseOpen :: [DocDiff] -> [DocDiff]
-collapseOpen = \case
+collapseOpen = case _ of
   DocSame indent line : DocOpen _ bra : xs ->
     DocSame indent (line ++ " " ++ bra) : collapseOpen xs
   DocItem indent prefix xs : ys ->
@@ -203,7 +203,7 @@ collapseOpen = \case
     []
 
 dropLeadingSep :: [DocDiff] -> [DocDiff]
-dropLeadingSep = \case
+dropLeadingSep = case _ of
   DocOpen oindent bra : DocItem indent prefix xs : ys ->
     DocOpen oindent bra : DocItem (indent + length prefix) "" (dropLeadingSep xs) : dropLeadingSep ys
   DocItem indent prefix xs : ys ->
@@ -214,7 +214,7 @@ dropLeadingSep = \case
     []
 
 mkDocDiff :: Int -> ValueDiff -> [DocDiff]
-mkDocDiff indent = \case
+mkDocDiff indent = case _ of
   ValueSame x ->
     same indent (renderValue x)
 

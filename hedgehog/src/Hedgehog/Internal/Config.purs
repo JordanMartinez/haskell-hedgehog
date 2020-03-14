@@ -129,21 +129,21 @@ detectWorkers = do
         pure $ WorkerCount env
 
 resolveColor :: MonadIO m => Maybe UseColor -> m UseColor
-resolveColor = \case
+resolveColor = case _ of
   Nothing ->
     detectColor
   Just x ->
     pure x
 
 resolveVerbosity :: MonadIO m => Maybe Verbosity -> m Verbosity
-resolveVerbosity = \case
+resolveVerbosity = case _ of
   Nothing ->
     detectVerbosity
   Just x ->
     pure x
 
 resolveWorkers :: MonadIO m => Maybe WorkerCount -> m WorkerCount
-resolveWorkers = \case
+resolveWorkers = case _ of
   Nothing ->
     detectWorkers
   Just x ->

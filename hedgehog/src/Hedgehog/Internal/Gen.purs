@@ -1120,7 +1120,7 @@ constant =
 --   /The input list must be non-empty./
 --
 element :: MonadGen m => [a] -> m a
-element = \case
+element = case _ of
   [] ->
     error "Hedgehog.Gen.element: used with empty list"
   xs -> do
@@ -1134,7 +1134,7 @@ element = \case
 --   /The input list must be non-empty./
 --
 choice :: MonadGen m => [m a] -> m a
-choice = \case
+choice = case _ of
   [] ->
     error "Hedgehog.Gen.choice: used with empty list"
   xs -> do
@@ -1149,12 +1149,12 @@ choice = \case
 --   /The input list must be non-empty./
 --
 frequency :: MonadGen m => [(Int, m a)] -> m a
-frequency = \case
+frequency = case _ of
   [] ->
     error "Hedgehog.Gen.frequency: used with empty list"
   xs0 -> do
     let
-      pick n = \case
+      pick n = case _ of
         [] ->
           error "Hedgehog.Gen.frequency/pick: used with empty list"
         (k, x) : xs ->
@@ -1468,7 +1468,7 @@ freeze =
           pure (x, fromGenT . fromTreeMaybeT . Tree.fromNodeT $ NodeT x xs)
 
 shrinkSubterms :: Subterms n a -> [Subterms n a]
-shrinkSubterms = \case
+shrinkSubterms = case _ of
   One _ ->
     []
   All xs ->
@@ -1482,7 +1482,7 @@ genSubterms =
   mapM (fmap snd . freeze)
 
 fromSubterms :: Applicative m => (Vec n a -> m a) -> Subterms n a -> m a
-fromSubterms f = \case
+fromSubterms f = case _ of
   One x ->
     pure x
   All xs ->

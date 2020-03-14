@@ -52,7 +52,7 @@ readFileSafe path =
     handle (\(_ :: IOException) -> pure Nothing) (Just <$> readFile path)
 
 takeHead :: [a] -> Maybe a
-takeHead = \case
+takeHead = case _ of
   [] ->
     Nothing
   x : _ ->
@@ -77,7 +77,7 @@ findDeclarations path =
 declarations :: [Classified (Pos Char)] -> Map String (Pos String)
 declarations =
   let
-    loop = \case
+    loop = case _ of
       [] ->
         []
       x : xs ->
@@ -159,7 +159,7 @@ classified =
     ko =
       Classified Comment
 
-    loop nesting in_line = \case
+    loop nesting in_line = case _ of
       [] ->
         []
 
@@ -217,7 +217,7 @@ instance Semigroup a => Semigroup (Pos a) where
 positioned :: FilePath -> [Char] -> [Pos Char]
 positioned path =
   let
-    loop l c = \case
+    loop l c = case _ of
       [] ->
         []
 

@@ -779,7 +779,7 @@ evalIO m =
 --   the 'Right'.
 --
 evalEither :: (MonadTest m, Show x, HasCallStack) => Either x a -> m a
-evalEither = \case
+evalEither = case _ of
   Left x ->
     withFrozenCallStack $ failWith Nothing $ showPretty x
   Right x ->
@@ -942,7 +942,7 @@ mapConfig f (Property cfg t) =
 withConfidence :: Confidence -> Property -> Property
 withConfidence c =
   let
-    setConfidence = \case
+    setConfidence = case _ of
       NoEarlyTermination _ tests -> NoEarlyTermination c tests
       NoConfidenceTermination tests -> NoEarlyTermination c tests
       EarlyTermination _ tests -> EarlyTermination c tests
@@ -974,7 +974,7 @@ verifiedTermination =
 withTests :: TestLimit -> Property -> Property
 withTests n =
   let
-    setTestLimit tests = \case
+    setTestLimit tests = case _ of
       NoEarlyTermination c _ -> NoEarlyTermination c tests
       NoConfidenceTermination _ -> NoConfidenceTermination tests
       EarlyTermination c _ -> EarlyTermination c tests
@@ -1037,7 +1037,7 @@ instance Monoid CoverCount where
     (<>)
 
 toCoverCount :: Cover -> CoverCount
-toCoverCount = \case
+toCoverCount = case _ of
   NoCover ->
     CoverCount 0
   Cover ->
