@@ -1,14 +1,3 @@
-{-# OPTIONS_HADDOCK not-home #-}
-{-# LANGUAGE BangPatterns #-}
-{-# LANGUAGE CPP #-}
-{-# LANGUAGE DeriveLift #-}
-{-# LANGUAGE DoAndIfThenElse #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell #-}
-
 module Hedgehog.Internal.Runner (
   -- * Running Individual Properties
     check

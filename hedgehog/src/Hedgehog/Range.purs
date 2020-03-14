@@ -1,4 +1,3 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Hedgehog.Range (
   -- * Size
     Size(..)

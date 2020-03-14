@@ -1,10 +1,3 @@
-{-# OPTIONS_HADDOCK not-home #-}
-{-# LANGUAGE DeriveLift #-}
-{-# LANGUAGE DoAndIfThenElse #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell #-}
 module Hedgehog.Internal.Config (
     UseColor(..)
   , resolveColor

@@ -1,9 +1,3 @@
-{-# OPTIONS_HADDOCK not-home #-}
-{-# LANGUAGE InstanceSigs #-}
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE TypeFamilies #-}
 module Hedgehog.Internal.Distributive (
     MonadTransDistributive(..)
   ) where

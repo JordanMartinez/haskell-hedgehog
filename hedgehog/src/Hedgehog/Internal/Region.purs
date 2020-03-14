@@ -1,4 +1,3 @@
-{-# OPTIONS_HADDOCK not-home #-}
 module Hedgehog.Internal.Region (
     Region(..)
   , newEmptyRegion

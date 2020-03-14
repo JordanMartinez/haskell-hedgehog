@@ -1,5 +1,3 @@
-{-# OPTIONS_HADDOCK not-home #-}
-{-# LANGUAGE RankNTypes #-}
 module Hedgehog.Internal.HTraversable (
     HTraversable(..)
   ) where

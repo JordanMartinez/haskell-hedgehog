@@ -1,6 +1,3 @@
-{-# OPTIONS_HADDOCK not-home #-}
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE TemplateHaskell #-}
 module Hedgehog.Internal.TH (
     TExpQ
   , discover

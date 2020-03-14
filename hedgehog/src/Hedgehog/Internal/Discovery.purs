@@ -1,8 +1,3 @@
-{-# OPTIONS_HADDOCK not-home #-}
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE CPP #-}
 module Hedgehog.Internal.Discovery (
     PropertySource(..)
   , readProperties

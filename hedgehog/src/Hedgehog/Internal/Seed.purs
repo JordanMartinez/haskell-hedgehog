@@ -1,5 +1,3 @@
-{-# OPTIONS_HADDOCK not-home #-}
-{-# LANGUAGE CPP #-}
 -- |
 -- This is a port of "Fast Splittable Pseudorandom Number Generators" by Steele
 -- et. al. [1].
@@ -25,7 +23,6 @@
 -- 2. Nikos Baxevanis
 --    https://github.com/moodmosaic/SplitMix/blob/master/SplitMix.hs
 --
-
 #include "MachDeps.h"
 
 module Hedgehog.Internal.Seed (
@@ -95,7 +92,6 @@ global =
     -- FIXME use /dev/urandom on posix
     seconds <- getPOSIXTime
     IORef.newIORef $ from (round (seconds * 1000))
-{-# NOINLINE global #-}
 
 -- | Create a random 'Seed' using an effectful source of randomness.
 --

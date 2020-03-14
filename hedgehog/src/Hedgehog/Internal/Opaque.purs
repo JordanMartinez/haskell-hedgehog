@@ -1,4 +1,3 @@
-{-# OPTIONS_HADDOCK not-home #-}
 module Hedgehog.Internal.Opaque (
     Opaque(..)
   ) where
