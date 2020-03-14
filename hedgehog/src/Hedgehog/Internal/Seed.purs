@@ -95,7 +95,7 @@ global =
 
 -- | Create a random 'Seed' using an effectful source of randomness.
 --
-random :: MonadIO m => m Seed
+random :: forall m. MonadEffect m => m Seed
 random =
   liftEffect $ IORef.atomicModifyIORef' global split
 

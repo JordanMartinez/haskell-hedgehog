@@ -32,11 +32,11 @@ newtype PropertySource =
       propertySource :: Pos String
     } deriving (Eq, Ord, Show)
 
-readProperties :: MonadIO m => String -> FilePath -> m (Map PropertyName PropertySource)
+readProperties :: forall m. MonadEffect m => String -> FilePath -> m (Map PropertyName PropertySource)
 readProperties prefix path =
   findProperties prefix path <$> liftEffect (readFile path)
 
-readDeclaration :: MonadIO m => FilePath -> LineNo -> m (Maybe (String, Pos String))
+readDeclaration :: forall m. MonadEffect m => FilePath -> LineNo -> m (Maybe (String, Pos String))
 readDeclaration path line = do
   mfile <- liftEffect $ readFileSafe path
   pure $ do
@@ -46,7 +46,7 @@ readDeclaration path line = do
       filter ((<= line) . posLine . posPostion . snd) $
       Map.toList (findDeclarations path file)
 
-readFileSafe :: MonadIO m => FilePath -> m (Maybe String)
+readFileSafe :: forall m. MonadEffect m => FilePath -> m (Maybe String)
 readFileSafe path =
   liftEffect $
     handle (\(_ :: IOException) -> pure Nothing) (Just <$> readFile path)

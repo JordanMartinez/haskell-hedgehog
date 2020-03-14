@@ -1608,7 +1608,7 @@ shuffleSeq xs =
 
 -- | Generate a sample from a generator.
 --
-sample :: MonadIO m => Gen a -> m a
+sample :: forall m. MonadEffect m => Gen a -> m a
 sample gen =
   liftEffect $
     let

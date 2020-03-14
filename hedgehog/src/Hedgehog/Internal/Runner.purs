@@ -328,7 +328,7 @@ checkNamed region color name prop = do
 
 -- | Check a property.
 --
-check :: MonadIO m => Property -> m Bool
+check :: forall m. MonadEffect m => Property -> m Bool
 check prop = do
   color <- detectColor
   liftEffect . displayRegion $ \region ->
@@ -336,7 +336,7 @@ check prop = do
 
 -- | Check a property using a specific size and seed.
 --
-recheck :: MonadIO m => Size -> Seed -> Property -> m ()
+recheck :: forall m. MonadEffect m => Size -> Seed -> Property -> m ()
 recheck size seed prop0 = do
   color <- detectColor
   let prop = withTests 1 prop0
@@ -346,7 +346,7 @@ recheck size seed prop0 = do
 
 -- | Check a group of properties using the specified runner config.
 --
-checkGroup :: MonadIO m => RunnerConfig -> Group -> m Bool
+checkGroup :: forall m. MonadEffect m => RunnerConfig -> Group -> m Bool
 checkGroup config (Group group props) =
   liftEffect $ do
     n <- resolveWorkers (runnerWorkers config)
@@ -444,7 +444,7 @@ checkGroupWith n verbosity color props =
 -- >     ]
 --
 --
-checkSequential :: MonadIO m => Group -> m Bool
+checkSequential :: forall m. MonadEffect m => Group -> m Bool
 checkSequential =
   checkGroup
     RunnerConfig {
@@ -478,7 +478,7 @@ checkSequential =
 -- >       ("prop_reverse", prop_reverse)
 -- >     ]
 --
-checkParallel :: MonadIO m => Group -> m Bool
+checkParallel :: forall m. MonadEffect m => Group -> m Bool
 checkParallel =
   checkGroup
     RunnerConfig {

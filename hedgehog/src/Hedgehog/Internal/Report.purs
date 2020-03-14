@@ -367,7 +367,7 @@ takeLines sloc =
   snd . Map.split (spanStartLine sloc - 1) .
   declarationSource
 
-readDeclaration :: MonadIO m => Span -> m (Maybe (Declaration ()))
+readDeclaration :: forall m. MonadEffect m => Span -> m (Maybe (Declaration ()))
 readDeclaration sloc =
   runMaybeT $ do
     path <- liftEffect . makeRelativeToCurrentDirectory $ spanFile sloc
@@ -595,7 +595,7 @@ ppTextLines :: String -> [Doc Markup]
 ppTextLines =
   fmap WL.text . List.lines
 
-ppFailureReport :: MonadIO m => Maybe PropertyName -> TestCount -> FailureReport -> m [Doc Markup]
+ppFailureReport :: forall m. MonadEffect m => Maybe PropertyName -> TestCount -> FailureReport -> m [Doc Markup]
 ppFailureReport name tests (FailureReport size seed _ mcoverage inputs0 mlocation0 msg mdiff msgs0) = do
   (msgs1, mlocation) <-
     case mlocation0 of
@@ -686,7 +686,7 @@ ppName = case _ of
   Just (PropertyName name) ->
     WL.text name
 
-ppProgress :: MonadIO m => Maybe PropertyName -> Report Progress -> m (Doc Markup)
+ppProgress :: forall m. MonadEffect m => Maybe PropertyName -> Report Progress -> m (Doc Markup)
 ppProgress name (Report tests discards coverage status) =
   case status of
     Running ->
@@ -709,7 +709,7 @@ ppProgress name (Report tests discards coverage status) =
         ppShrinkDiscard (failureShrinks failure) discards <+>
         "(shrinking)"
 
-ppResult :: MonadIO m => Maybe PropertyName -> Report Result -> m (Doc Markup)
+ppResult :: forall m. MonadEffect m => Maybe PropertyName -> Report Result -> m (Doc Markup)
 ppResult name (Report tests discards coverage result) = do
   case result of
     Failed failure -> do
@@ -1016,7 +1016,7 @@ annotateSummary summary =
   else
     icon SuccessIcon '✓' . WL.annotate SuccessText
 
-ppSummary :: MonadIO m => Summary -> m (Doc Markup)
+ppSummary :: forall m. MonadEffect m => Summary -> m (Doc Markup)
 ppSummary summary =
   let
     complete =
@@ -1058,7 +1058,7 @@ ppSummary summary =
             Nothing
         ]
 
-renderDoc :: MonadIO m => UseColor -> Doc Markup -> m String
+renderDoc :: forall m. MonadEffect m => UseColor -> Doc Markup -> m String
 renderDoc color doc = do
   let
     dull =
@@ -1178,14 +1178,14 @@ renderDoc color doc = do
     WL.renderSmart 100 $
     WL.indent 2 doc
 
-renderProgress :: MonadIO m => UseColor -> Maybe PropertyName -> Report Progress -> m String
+renderProgress :: forall m. MonadEffect m => UseColor -> Maybe PropertyName -> Report Progress -> m String
 renderProgress color name x =
   renderDoc color =<< ppProgress name x
 
-renderResult :: MonadIO m => UseColor -> Maybe PropertyName -> Report Result -> m String
+renderResult :: forall m. MonadEffect m => UseColor -> Maybe PropertyName -> Report Result -> m String
 renderResult color name x =
   renderDoc color =<< ppResult name x
 
-renderSummary :: MonadIO m => UseColor -> Summary -> m String
+renderSummary :: forall m. MonadEffect m => UseColor -> Summary -> m String
 renderSummary color x =
   renderDoc color =<< ppSummary x

@@ -51,12 +51,12 @@ newtype WorkerCount =
   WorkerCount Int
   deriving (Eq, Ord, Show, Num, Enum, Real, Integral, Lift)
 
-detectMark :: MonadIO m => m Bool
+detectMark :: forall m. MonadEffect m => m Bool
 detectMark = do
   user <- liftEffect $ lookupEnv "USER"
   pure $ user == Just "mth"
 
-lookupBool :: MonadIO m => String -> m (Maybe Bool)
+lookupBool :: forall m. MonadEffect m => String -> m (Maybe Bool)
 lookupBool key =
   liftEffect $ do
     menv <- lookupEnv key
@@ -78,7 +78,7 @@ lookupBool key =
       _ ->
         pure Nothing
 
-detectColor :: MonadIO m => m UseColor
+detectColor :: forall m. MonadEffect m => m UseColor
 detectColor =
   liftEffect $ do
     ok <- lookupBool "HEDGEHOG_COLOR"
@@ -100,7 +100,7 @@ detectColor =
           else
             pure DisableColor
 
-detectVerbosity :: MonadIO m => m Verbosity
+detectVerbosity :: forall m. MonadEffect m => m Verbosity
 detectVerbosity =
   liftEffect $ do
     menv <- (readMaybe =<<) <$> lookupEnv "HEDGEHOG_VERBOSITY"
@@ -118,7 +118,7 @@ detectVerbosity =
         else
           pure Normal
 
-detectWorkers :: MonadIO m => m WorkerCount
+detectWorkers :: forall m. MonadEffect m => m WorkerCount
 detectWorkers = do
   liftEffect $ do
     menv <- (readMaybe =<<) <$> lookupEnv "HEDGEHOG_WORKERS"
@@ -128,21 +128,21 @@ detectWorkers = do
       Just env ->
         pure $ WorkerCount env
 
-resolveColor :: MonadIO m => Maybe UseColor -> m UseColor
+resolveColor :: forall m. MonadEffect m => Maybe UseColor -> m UseColor
 resolveColor = case _ of
   Nothing ->
     detectColor
   Just x ->
     pure x
 
-resolveVerbosity :: MonadIO m => Maybe Verbosity -> m Verbosity
+resolveVerbosity :: forall m. MonadEffect m => Maybe Verbosity -> m Verbosity
 resolveVerbosity = case _ of
   Nothing ->
     detectVerbosity
   Just x ->
     pure x
 
-resolveWorkers :: MonadIO m => Maybe WorkerCount -> m WorkerCount
+resolveWorkers :: forall m. MonadEffect m => Maybe WorkerCount -> m WorkerCount
 resolveWorkers = case _ of
   Nothing ->
     detectWorkers
