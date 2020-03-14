@@ -294,7 +294,7 @@ checkRegion ::
   -> Property
   -> m (Report Result)
 checkRegion region color name size seed prop =
-  liftIO $ do
+  liftEffect $ do
     result <-
       checkReport (propertyConfig prop) size seed (propertyTest prop) $ \progress -> do
         ppprogress <- renderProgress color name progress
@@ -323,7 +323,7 @@ checkNamed ::
   -> Property
   -> m (Report Result)
 checkNamed region color name prop = do
-  seed <- liftIO Seed.random
+  seed <- liftEffect Seed.random
   checkRegion region color name 0 seed prop
 
 -- | Check a property.
@@ -331,7 +331,7 @@ checkNamed region color name prop = do
 check :: MonadIO m => Property -> m Bool
 check prop = do
   color <- detectColor
-  liftIO . displayRegion $ \region ->
+  liftEffect . displayRegion $ \region ->
     (== OK) . reportStatus <$> checkNamed region color Nothing prop
 
 -- | Check a property using a specific size and seed.
@@ -340,7 +340,7 @@ recheck :: MonadIO m => Size -> Seed -> Property -> m ()
 recheck size seed prop0 = do
   color <- detectColor
   let prop = withTests 1 prop0
-  _ <- liftIO . displayRegion $ \region ->
+  _ <- liftEffect . displayRegion $ \region ->
     checkRegion region color Nothing size seed prop
   pure ()
 
@@ -348,7 +348,7 @@ recheck size seed prop0 = do
 --
 checkGroup :: MonadIO m => RunnerConfig -> Group -> m Bool
 checkGroup config (Group group props) =
-  liftIO $ do
+  liftEffect $ do
     n <- resolveWorkers (runnerWorkers config)
 
     -- ensure few spare capabilities for concurrent-output, it's likely that
@@ -387,7 +387,7 @@ checkGroupWith n verbosity color props =
 
     let
       start (TasksRemaining tasks) _ix (name, prop) =
-        liftIO $ do
+        liftEffect $ do
           updateSummary sregion svar color $ \x -> x {
               summaryWaiting =
                 PropertyCount tasks

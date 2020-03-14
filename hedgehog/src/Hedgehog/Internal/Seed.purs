@@ -97,7 +97,7 @@ global =
 --
 random :: MonadIO m => m Seed
 random =
-  liftIO $ IORef.atomicModifyIORef' global split
+  liftEffect $ IORef.atomicModifyIORef' global split
 
 -- | Create a 'Seed' using a 'Word64'.
 --

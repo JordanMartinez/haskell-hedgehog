@@ -370,7 +370,7 @@ takeLines sloc =
 readDeclaration :: MonadIO m => Span -> m (Maybe (Declaration ()))
 readDeclaration sloc =
   runMaybeT $ do
-    path <- liftIO . makeRelativeToCurrentDirectory $ spanFile sloc
+    path <- liftEffect . makeRelativeToCurrentDirectory $ spanFile sloc
 
     (name, Pos (Position _ line0 _) src) <- MaybeT $
       Discovery.readDeclaration path (spanEndLine sloc)
@@ -1168,7 +1168,7 @@ renderDoc color doc = do
           WL.display
 
 #if mingw32_HOST_OS
-  liftIO $ do
+  liftEffect $ do
     hSetEncoding stdout utf8
     hSetEncoding stderr utf8
 #endif

@@ -53,12 +53,12 @@ newtype WorkerCount =
 
 detectMark :: MonadIO m => m Bool
 detectMark = do
-  user <- liftIO $ lookupEnv "USER"
+  user <- liftEffect $ lookupEnv "USER"
   pure $ user == Just "mth"
 
 lookupBool :: MonadIO m => String -> m (Maybe Bool)
 lookupBool key =
-  liftIO $ do
+  liftEffect $ do
     menv <- lookupEnv key
     case menv of
       Just "0" ->
@@ -80,7 +80,7 @@ lookupBool key =
 
 detectColor :: MonadIO m => m UseColor
 detectColor =
-  liftIO $ do
+  liftEffect $ do
     ok <- lookupBool "HEDGEHOG_COLOR"
     case ok of
       Just False ->
@@ -102,7 +102,7 @@ detectColor =
 
 detectVerbosity :: MonadIO m => m Verbosity
 detectVerbosity =
-  liftIO $ do
+  liftEffect $ do
     menv <- (readMaybe =<<) <$> lookupEnv "HEDGEHOG_VERBOSITY"
     case menv of
       Just (0 :: Int) ->
@@ -120,7 +120,7 @@ detectVerbosity =
 
 detectWorkers :: MonadIO m => m WorkerCount
 detectWorkers = do
-  liftIO $ do
+  liftEffect $ do
     menv <- (readMaybe =<<) <$> lookupEnv "HEDGEHOG_WORKERS"
     case menv of
       Nothing ->

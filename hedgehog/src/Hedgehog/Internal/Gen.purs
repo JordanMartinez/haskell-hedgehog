@@ -585,8 +585,8 @@ instance PrimMonad m => PrimMonad (GenT m) where
     lift . primitive
 
 instance MonadIO m => MonadIO (GenT m) where
-  liftIO =
-    lift . liftIO
+  liftEffect =
+    lift . liftEffect
 
 instance MonadBase b m => MonadBase b (GenT m) where
   liftBase =
@@ -1610,7 +1610,7 @@ shuffleSeq xs =
 --
 sample :: MonadIO m => Gen a -> m a
 sample gen =
-  liftIO $
+  liftEffect $
     let
       loop n =
         if n <= 0 then
@@ -1641,7 +1641,7 @@ sample gen =
 --
 print :: (MonadIO m, Show a) => Gen a -> m ()
 print gen = do
-  seed <- liftIO Seed.random
+  seed <- liftEffect Seed.random
   printWith 30 seed gen
 
 -- | Print the value produced by a generator, and the first level of shrinks,
@@ -1651,7 +1651,7 @@ print gen = do
 --
 printWith :: (MonadIO m, Show a) => Size -> Seed -> Gen a -> m ()
 printWith size seed gen =
-  liftIO $ do
+  liftEffect $ do
     case evalGen size seed gen of
       Nothing -> do
         putStrLn "=== Outcome ==="
@@ -1692,7 +1692,7 @@ printWith size seed gen =
 --
 printTree :: (MonadIO m, Show a) => Gen a -> m ()
 printTree gen = do
-  seed <- liftIO Seed.random
+  seed <- liftEffect Seed.random
   printTreeWith 30 seed gen
 
 -- | Print the shrink tree produced by a generator, for the given size and
@@ -1702,7 +1702,7 @@ printTree gen = do
 --
 printTreeWith :: (MonadIO m, Show a) => Size -> Seed -> Gen a -> m ()
 printTreeWith size seed gen = do
-  liftIO . putStr $
+  liftEffect . putStr $
     renderTree size seed gen
 
 -- | Render the shrink tree produced by a generator, for the given size and

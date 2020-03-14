@@ -768,12 +768,12 @@ evalM m =
 
 -- | Fails the test if the 'IO' action throws an exception.
 --
---   /The benefit of using this over 'liftIO' is that the location of the/
+--   /The benefit of using this over 'liftEffect' is that the location of the/
 --   /exception will be shown in the output./
 --
 evalIO :: (MonadTest m, MonadIO m, HasCallStack) => IO a -> m a
 evalIO m =
-  either (withFrozenCallStack failException) pure =<< liftIO (tryAll m)
+  either (withFrozenCallStack failException) pure =<< liftEffect (tryAll m)
 
 -- | Fails the test if the 'Either' is 'Left', otherwise returns the value in
 --   the 'Right'.

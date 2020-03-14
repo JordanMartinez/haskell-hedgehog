@@ -504,8 +504,8 @@ instance PrimMonad m => PrimMonad (TreeT m) where
     lift . primitive
 
 instance MonadIO m => MonadIO (TreeT m) where
-  liftIO =
-    lift . liftIO
+  liftEffect =
+    lift . liftEffect
 
 instance MonadBase b m => MonadBase b (TreeT m) where
   liftBase =

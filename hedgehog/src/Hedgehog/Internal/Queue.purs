@@ -78,7 +78,7 @@ runActiveFinalizers ::
   => MVar (TaskIndex, Map TaskIndex (IO ()))
   -> m ()
 runActiveFinalizers mvar =
-  liftIO $ do
+  liftEffect $ do
     again <-
       MVar.modifyMVar mvar $ \original@(minIx, finalizers0) ->
         case Map.minViewWithKey finalizers0 of
@@ -102,7 +102,7 @@ finalizeTask ::
   -> IO ()
   -> m ()
 finalizeTask mvar ix finalize = do
-  liftIO . MVar.modifyMVar_ mvar $ \(minIx, finalizers) ->
+  liftEffect . MVar.modifyMVar_ mvar $ \(minIx, finalizers) ->
     pure (minIx, Map.insert ix finalize finalizers)
   runActiveFinalizers mvar
 

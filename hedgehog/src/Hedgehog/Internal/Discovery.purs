@@ -34,11 +34,11 @@ newtype PropertySource =
 
 readProperties :: MonadIO m => String -> FilePath -> m (Map PropertyName PropertySource)
 readProperties prefix path =
-  findProperties prefix path <$> liftIO (readFile path)
+  findProperties prefix path <$> liftEffect (readFile path)
 
 readDeclaration :: MonadIO m => FilePath -> LineNo -> m (Maybe (String, Pos String))
 readDeclaration path line = do
-  mfile <- liftIO $ readFileSafe path
+  mfile <- liftEffect $ readFileSafe path
   pure $ do
     file <- mfile
     takeHead .
@@ -48,7 +48,7 @@ readDeclaration path line = do
 
 readFileSafe :: MonadIO m => FilePath -> m (Maybe String)
 readFileSafe path =
-  liftIO $
+  liftEffect $
     handle (\(_ :: IOException) -> pure Nothing) (Just <$> readFile path)
 
 takeHead :: [a] -> Maybe a
