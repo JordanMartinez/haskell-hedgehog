@@ -11,69 +11,89 @@ module Hedgehog.Internal.Config (
   , detectMark
   , detectColor
   , detectVerbosity
-  , detectWorkers
+  -- , detectWorkers
   ) where
 
-import           Control.Monad.IO.Class (MonadIO(..))
+import Prelude
+import Data.Maybe (Maybe(..))
+import Effect.Class (class MonadEffect, liftEffect)
+import Data.Generic.Rep (class Generic)
+import Data.Generic.Rep.Show (genericShow)
+-- import           Control.Monad.IO.Class (MonadIO(..))
 
 -- import qualified GHC.Conc as Conc
 
-import           Language.Haskell.TH.Syntax (Lift)
+-- import           Language.Haskell.TH.Syntax (Lift)
 
-import           System.Console.ANSI (hSupportsANSI)
-import           System.Environment (lookupEnv)
-import           System.IO (stdout)
+-- import           System.Console.ANSI (hSupportsANSI)
+import Node.Process (lookupEnv)
+-- import           System.IO (stdout)
 
-import           Text.Read (readMaybe)
+import Data.Int (fromString)
 
 
 -- | Whether to render output using ANSI colors or not.
---
+-- | DisableColor = Disable ANSI colors in report output.
+-- | EnableColor = Enable ANSI colors in report output.
 data UseColor =
     DisableColor
-    -- ^ Disable ANSI colors in report output.
   | EnableColor
-    -- ^ Enable ANSI colors in report output.
-    deriving (Eq, Ord, Show, Lift)
+
+derive instance eqUseColor :: Eq UseColor
+derive instance ordUseColor :: Ord UseColor
+derive instance genericUseColor :: Generic UseColor _
+instance showUseColor :: Show UseColor where
+  show x = genericShow x
 
 -- | How verbose should the report output be.
---
+-- | Quiet = Only display the summary of the test run.
+-- | Normal = Display each property as it is running, as well as the summary.
 data Verbosity =
     Quiet
-    -- ^ Only display the summary of the test run.
   | Normal
-    -- ^ Display each property as it is running, as well as the summary.
-    deriving (Eq, Ord, Show, Lift)
+derive instance eqVerbosity :: Eq Verbosity
+derive instance ordVerbosity :: Ord Verbosity
+derive instance genericVerbosity :: Generic Verbosity _
+instance showVerbosity :: Show Verbosity where
+  show x = genericShow x
 
 -- | The number of workers to use when running properties in parallel.
---
-newtype WorkerCount =
-  WorkerCount Int
-  deriving (Eq, Ord, Show, Num, Enum, Real, Integral, Lift)
+newtype WorkerCount = WorkerCount Int
+derive instance eqWorkerCount :: Eq WorkerCount
+derive instance ordWorkerCount :: Ord WorkerCount
+derive instance genericWorkerCount :: Generic WorkerCount _
+instance showWorkerCount :: Show WorkerCount where
+  show x = genericShow x
+instance semigroupWorkerCount :: Semigroup WorkerCount where
+  append (WorkerCount x) (WorkerCount y) = WorkerCount (x + y)
+instance monoidWorkerCount :: Monoid WorkerCount where
+  mempty = WorkerCount    0
+derive newtype instance semiringWorkerCount :: Semiring WorkerCount
+  -- deriving (Eq, Ord, Show, Num, Enum, Real, Integral, Lift)
 
-detectMark :: forall m. MonadEffect m => m Bool
+detectMark :: forall m. MonadEffect m => m Boolean
 detectMark = do
   user <- liftEffect $ lookupEnv "USER"
   pure $ user == Just "mth"
 
-lookupBool :: forall m. MonadEffect m => String -> m (Maybe Bool)
-lookupBool key =
+lookupBoolean :: forall m. MonadEffect m => String -> m (Maybe Boolean)
+lookupBoolean key =
   liftEffect $ do
     menv <- lookupEnv key
     case menv of
       Just "0" ->
-        pure $ Just False
+        pure $ Just false
       Just "no" ->
-        pure $ Just False
+        pure $ Just false
       Just "false" ->
-        pure $ Just False
+        pure $ Just false
 
       Just "1" ->
-        pure $ Just True
+        pure $ Just true
       Just "yes" ->
-        pure $ Just True
+        pure $ Just true
       Just "true" ->
-        pure $ Just True
+        pure $ Just true
 
       _ ->
         pure Nothing
@@ -81,34 +101,36 @@ lookupBool key =
 detectColor :: forall m. MonadEffect m => m UseColor
 detectColor =
   liftEffect $ do
-    ok <- lookupBool "HEDGEHOG_COLOR"
+    ok <- lookupBoolean "HEDGEHOG_COLOR"
     case ok of
-      Just False ->
+      Just false ->
         pure DisableColor
 
-      Just True ->
+      Just true ->
         pure EnableColor
 
       Nothing -> do
-        mth <- detectMark
-        if mth then
-          pure DisableColor -- avoid getting fired :)
-        else do
-          enable <- hSupportsANSI stdout
-          if enable then
-            pure EnableColor
-          else
-            pure DisableColor
+        pure DisableColor
+        -- TODO: figure out whether terminal supports ANSI codes later
+        -- mth <- detectMark
+        -- if mth then
+        --   pure DisableColor -- avoid getting fired :)
+        -- else do
+        --   enable <- hSupportsANSI stdout
+        --   if enable then
+        --     pure EnableColor
+        --   else
+        --     pure DisableColor
 
 detectVerbosity :: forall m. MonadEffect m => m Verbosity
 detectVerbosity =
   liftEffect $ do
-    menv <- (readMaybe =<<) <$> lookupEnv "HEDGEHOG_VERBOSITY"
+    menv <- (fromString =<< _) <$> lookupEnv "HEDGEHOG_VERBOSITY"
     case menv of
-      Just (0 :: Int) ->
+      Just 0 ->
         pure Quiet
 
-      Just (1 :: Int) ->
+      Just 1 ->
         pure Normal
 
       _ -> do
@@ -118,15 +140,15 @@ detectVerbosity =
         else
           pure Normal
 
-detectWorkers :: forall m. MonadEffect m => m WorkerCount
-detectWorkers = do
-  liftEffect $ do
-    menv <- (readMaybe =<<) <$> lookupEnv "HEDGEHOG_WORKERS"
-    case menv of
-      Nothing ->
-        WorkerCount <$> Conc.getNumProcessors
-      Just env ->
-        pure $ WorkerCount env
+-- detectWorkers :: forall m. MonadEffect m => m WorkerCount
+-- detectWorkers = do
+--   liftEffect $ do
+--     menv <- fromString <$> lookupEnv "HEDGEHOG_WORKERS"
+--     case menv of
+--       Nothing ->
+--         WorkerCount <$> Conc.getNumProcessors
+--       Just env ->
+--         pure $ WorkerCount env
 
 resolveColor :: forall m. MonadEffect m => Maybe UseColor -> m UseColor
 resolveColor = case _ of
@@ -143,8 +165,10 @@ resolveVerbosity = case _ of
     pure x
 
 resolveWorkers :: forall m. MonadEffect m => Maybe WorkerCount -> m WorkerCount
-resolveWorkers = case _ of
-  Nothing ->
-    detectWorkers
-  Just x ->
-    pure x
+resolveWorkers = const (pure (WorkerCount 1))
+  -- TODO: reenable concurrency, but avoid it for now...
+  -- case _ of
+  -- Nothing ->
+  --   detectWorkers
+  -- Just x ->
+  --   pure x
