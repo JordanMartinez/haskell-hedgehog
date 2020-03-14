@@ -70,7 +70,7 @@ runTasks n tasks start finish finalize runTask = do
           worker (r : rs)
 
   -- FIXME ensure all workers have finished running
-  fmap concat . forConcurrently [1..max 1 n] $ \_ix ->
+  fmap concat <<< forConcurrently [1..max 1 n] $ \_ix ->
     worker []
 
 runActiveFinalizers ::
@@ -102,7 +102,7 @@ finalizeTask ::
   -> IO ()
   -> m ()
 finalizeTask mvar ix finalize = do
-  liftEffect . MVar.modifyMVar_ mvar $ \(minIx, finalizers) ->
+  liftEffect <<< MVar.modifyMVar_ mvar $ \(minIx, finalizers) ->
     pure (minIx, Map.insert ix finalize finalizers)
   runActiveFinalizers mvar
 

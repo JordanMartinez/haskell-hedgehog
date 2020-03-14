@@ -235,14 +235,14 @@ runGenT size seed (GenT m) =
 --
 evalGen :: Size -> Seed -> Gen a -> Maybe (Tree a)
 evalGen size seed =
-  Tree.mapMaybe id .
+  Tree.mapMaybe id <<<
   evalGenT size seed
 
 -- | Runs a generator, producing its shrink tree.
 --
 evalGenT :: Monad m => Size -> Seed -> GenT m a -> TreeT m (Maybe a)
 evalGenT size seed =
-  runDiscardEffectT .
+  runDiscardEffectT <<<
   runGenT size seed
 
 -- | Map over a generator's shrink tree.
@@ -257,7 +257,7 @@ mapGenT f gen =
 --
 fromTree :: MonadGen m => Tree a -> m a
 fromTree =
-  fromTreeT .
+  fromTreeT <<<
   hoist (Morph.generalize)
 
 -- | Lift a predefined shrink tree in to a generator, ignoring the seed and the
@@ -266,21 +266,21 @@ fromTree =
 fromTreeT :: MonadGen m => TreeT (GenBase m) a -> m a
 fromTreeT x =
   fromTreeMaybeT $
-    hoist (MaybeT . fmap Just) x
+    hoist (MaybeT <<< fmap Just) x
 
 -- | Lift a predefined shrink tree in to a generator, ignoring the seed and the
 --   size.
 --
 fromTreeMaybeT :: MonadGen m => TreeT (MaybeT (GenBase m)) a -> m a
 fromTreeMaybeT x =
-  fromGenT . GenT $ \_ _ ->
+  fromGenT <<< GenT $ \_ _ ->
     x
 
 -- | Observe a generator's shrink tree.
 --
 toTree :: forall m a. (MonadGen m, GenBase m ~ Identity) => m a -> m (Tree a)
 toTree =
-  withGenT $ mapGenT (Maybe.maybe empty pure . runDiscardEffect)
+  withGenT $ mapGenT (Maybe.maybe empty pure <<< runDiscardEffect)
 
 -- | Lift a predefined shrink tree in to a generator, ignoring the seed and the
 --   size.
@@ -298,7 +298,7 @@ toTreeMaybeT =
 --
 runDiscardEffect :: TreeT (MaybeT Identity) a -> Maybe (Tree a)
 runDiscardEffect =
-  Tree.mapMaybe id .
+  Tree.mapMaybe id <<<
   runDiscardEffectT
 
 -- | Run the discard effects through the tree and reify them as 'Maybe' values
@@ -308,7 +308,7 @@ runDiscardEffect =
 --
 runDiscardEffectT :: Monad m => TreeT (MaybeT m) a -> TreeT m (Maybe a)
 runDiscardEffectT =
-  runMaybeT .
+  runMaybeT <<<
   distributeT
 
 -- | Lift a @Gen / GenT Identity@ in to a @Monad m => GenT m@
@@ -337,7 +337,7 @@ class (Monad m, Monad (GenBase m)) => MonadGen m where
 --
 withGenT :: (MonadGen m, MonadGen n) => (GenT (GenBase m) a -> GenT (GenBase n) b) -> m a -> n b
 withGenT f =
-  fromGenT . f . toGenT
+  fromGenT <<< f <<< toGenT
 
 instance Monad m => MonadGen (GenT m) where
   -- | The type of the transformer stack's base 'Monad'.
@@ -360,80 +360,80 @@ instance MonadGen m => MonadGen (IdentityT m) where
     IdentityT (GenBase m)
 
   toGenT =
-    distributeT . hoist toGenT
+    distributeT <<< hoist toGenT
 
   fromGenT =
-    hoist fromGenT . distributeT
+    hoist fromGenT <<< distributeT
 
 instance MonadGen m => MonadGen (MaybeT m) where
   type GenBase (MaybeT m) =
     MaybeT (GenBase m)
 
   toGenT =
-    distributeT . hoist toGenT
+    distributeT <<< hoist toGenT
 
   fromGenT =
-    hoist fromGenT . distributeT
+    hoist fromGenT <<< distributeT
 
 instance MonadGen m => MonadGen (ExceptT x m) where
   type GenBase (ExceptT x m) =
     ExceptT x (GenBase m)
 
   toGenT =
-    distributeT . hoist toGenT
+    distributeT <<< hoist toGenT
 
   fromGenT =
-    hoist fromGenT . distributeT
+    hoist fromGenT <<< distributeT
 
 instance MonadGen m => MonadGen (ReaderT r m) where
   type GenBase (ReaderT r m) =
     ReaderT r (GenBase m)
 
   toGenT =
-    distributeT . hoist toGenT
+    distributeT <<< hoist toGenT
 
   fromGenT =
-    hoist fromGenT . distributeT
+    hoist fromGenT <<< distributeT
 
 instance MonadGen m => MonadGen (Lazy.StateT r m) where
   type GenBase (Lazy.StateT r m) =
     Lazy.StateT r (GenBase m)
 
   toGenT =
-    distributeT . hoist toGenT
+    distributeT <<< hoist toGenT
 
   fromGenT =
-    hoist fromGenT . distributeT
+    hoist fromGenT <<< distributeT
 
 instance MonadGen m => MonadGen (Strict.StateT r m) where
   type GenBase (Strict.StateT r m) =
     Strict.StateT r (GenBase m)
 
   toGenT =
-    distributeT . hoist toGenT
+    distributeT <<< hoist toGenT
 
   fromGenT =
-    hoist fromGenT . distributeT
+    hoist fromGenT <<< distributeT
 
 instance (MonadGen m, Monoid w) => MonadGen (Lazy.WriterT w m) where
   type GenBase (Lazy.WriterT w m) =
     Lazy.WriterT w (GenBase m)
 
   toGenT =
-    distributeT . hoist toGenT
+    distributeT <<< hoist toGenT
 
   fromGenT =
-    hoist fromGenT . distributeT
+    hoist fromGenT <<< distributeT
 
 instance (MonadGen m, Monoid w) => MonadGen (Strict.WriterT w m) where
   type GenBase (Strict.WriterT w m) =
     Strict.WriterT w (GenBase m)
 
   toGenT =
-    distributeT . hoist toGenT
+    distributeT <<< hoist toGenT
 
   fromGenT =
-    hoist fromGenT . distributeT
+    hoist fromGenT <<< distributeT
 
 ------------------------------------------------------------------------
 -- GenT instances
@@ -459,7 +459,7 @@ instance Functor m => Functor (GenT m) where
 --
 instance Monad m => Applicative (GenT m) where
   pure =
-    fromTreeMaybeT . pure
+    fromTreeMaybeT <<< pure
 
   (<*>) f m =
     GenT $ \ size seed ->
@@ -474,7 +474,7 @@ instance Monad m => Applicative (GenT m) where
 --
 --instance Monad m => Applicative (GenT m) where
 --  pure =
---    fromTreeMaybeT . pure
+--    fromTreeMaybeT <<< pure
 --  (<*>) f m =
 --    GenT $ \ size seed ->
 --      case Seed.split seed of
@@ -490,7 +490,7 @@ instance Monad m => Monad (GenT m) where
     GenT $ \size seed ->
       case Seed.split seed of
         (sk, sm) ->
-          runGenT size sk . k =<<
+          runGenT size sk <<< k =<<
           runGenT size sm m
 
 #if __GLASGOW_HASKELL__ < 808
@@ -522,7 +522,7 @@ instance Monad m => MonadPlus (GenT m) where
 
 instance MonadTrans GenT where
   lift =
-    fromTreeMaybeT . lift . lift
+    fromTreeMaybeT <<< lift <<< lift
 
 instance MFunctor GenT where
   hoist f =
@@ -536,7 +536,7 @@ embedMaybeT ::
   -> MaybeT m b
   -> t (MaybeT n) b
 embedMaybeT f m =
-  lift . MaybeT . pure =<< f (runMaybeT m)
+  lift <<< MaybeT <<< pure =<< f (runMaybeT m)
 
 embedTreeMaybeT ::
      Monad n
@@ -555,7 +555,7 @@ embedGenT f gen =
   GenT $ \size seed ->
     case Seed.split seed of
       (sf, sg) ->
-        (runGenT size sf . f) `embedTreeMaybeT`
+        (runGenT size sf <<< f) `embedTreeMaybeT`
         (runGenT size sg gen)
 
 instance MMonad GenT where
@@ -564,8 +564,8 @@ instance MMonad GenT where
 
 distributeGenT :: Transformer t GenT m => GenT (t m) a -> t (GenT m) a
 distributeGenT x =
-  join . lift . GenT $ \size seed ->
-    pure . hoist fromTreeMaybeT . distributeT . hoist distributeT $ runGenT size seed x
+  join <<< lift <<< GenT $ \size seed ->
+    pure <<< hoist fromTreeMaybeT <<< distributeT <<< hoist distributeT $ runGenT size seed x
 
 instance MonadTransDistributive GenT where
   type Transformer t GenT m = (
@@ -582,15 +582,15 @@ instance PrimMonad m => PrimMonad (GenT m) where
     PrimState m
 
   primitive =
-    lift . primitive
+    lift <<< primitive
 
 instance MonadIO m => MonadIO (GenT m) where
   liftEffect =
-    lift . liftEffect
+    lift <<< liftEffect
 
 instance MonadBase b m => MonadBase b (GenT m) where
   liftBase =
-    lift . liftBase
+    lift <<< liftBase
 
 #if __GLASGOW_HASKELL__ >= 806
 deriving via (ReaderT Size (ReaderT Seed (TreeT (MaybeT m))))
@@ -599,7 +599,7 @@ deriving via (ReaderT Size (ReaderT Seed (TreeT (MaybeT m))))
 instance MonadBaseControl b m => MonadBaseControl b (GenT m) where
   type StM (GenT m) a = StM (GloopT m) a
   liftBaseWith g = gloopToGen $ liftBaseWith $ \q -> g (\gen -> q (genToGloop gen))
-  restoreM = gloopToGen . restoreM
+  restoreM = gloopToGen <<< restoreM
 
 type GloopT m = ReaderT Size (ReaderT Seed (TreeT (MaybeT m)))
 
@@ -612,7 +612,7 @@ genToGloop = coerce
 
 instance MonadThrow m => MonadThrow (GenT m) where
   throwM =
-    lift . throwM
+    lift <<< throwM
 
 instance MonadCatch m => MonadCatch (GenT m) where
   catch m onErr =
@@ -620,7 +620,7 @@ instance MonadCatch m => MonadCatch (GenT m) where
       case Seed.split seed of
         (sm, se) ->
           (runGenT size sm m) `catch`
-          (runGenT size se . onErr)
+          (runGenT size se <<< onErr)
 
 instance MonadReader r m => MonadReader r (GenT m) where
   ask =
@@ -632,15 +632,15 @@ instance MonadState s m => MonadState s (GenT m) where
   get =
     lift get
   put =
-    lift . put
+    lift <<< put
   state =
-    lift . state
+    lift <<< state
 
 instance MonadWriter w m => MonadWriter w (GenT m) where
   writer =
-    lift . writer
+    lift <<< writer
   tell =
-    lift . tell
+    lift <<< tell
   listen m =
     GenT $ \size seed ->
       listen $ runGenT size seed m
@@ -650,17 +650,17 @@ instance MonadWriter w m => MonadWriter w (GenT m) where
 
 instance MonadError e m => MonadError e (GenT m) where
   throwError =
-    lift . throwError
+    lift <<< throwError
   catchError m onErr =
     GenT $ \size seed ->
       case Seed.split seed of
         (sm, se) ->
           (runGenT size sm m) `catchError`
-          (runGenT size se . onErr)
+          (runGenT size se <<< onErr)
 
 instance MonadResource m => MonadResource (GenT m) where
   liftResourceT =
-    lift . liftResourceT
+    lift <<< liftResourceT
 
 ------------------------------------------------------------------------
 -- Combinators
@@ -669,7 +669,7 @@ instance MonadResource m => MonadResource (GenT m) where
 --
 generate :: MonadGen m => (Size -> Seed -> a) -> m a
 generate f =
-  fromGenT . GenT $ \size seed ->
+  fromGenT <<< GenT $ \size seed ->
     pure (f size seed)
 
 ------------------------------------------------------------------------
@@ -787,7 +787,7 @@ integral_ range =
       (x, y) =
         Range.bounds size range
     in
-      fromInteger . fst $
+      fromInteger <<< fst $
         Seed.nextInteger (toInteger x) (toInteger y) seed
 
 -- | Generates a random machine integer in the given @[inclusive,inclusive]@ range.
@@ -892,7 +892,7 @@ realFrac_ range =
       (x, y) =
         Range.bounds size range
     in
-      realToFrac . fst $
+      realToFrac <<< fst $
         Seed.nextDouble (realToFrac x) (realToFrac y) seed
 
 -- | Generates a random floating-point number in the @[inclusive,exclusive)@ range.
@@ -926,7 +926,7 @@ double =
 --
 enum :: (MonadGen m, Enum a) => a -> a -> m a
 enum lo hi =
-  fmap toEnum . integral $
+  fmap toEnum <<< integral $
     Range.constant (fromEnum lo) (fromEnum hi)
 
 -- | Generates a random value from a bounded enumeration.
@@ -962,7 +962,7 @@ bool =
 bool_ :: MonadGen m => m Bool
 bool_ =
   generate $ \_ seed ->
-    (/= 0) . fst $ Seed.nextInteger 0 1 seed
+    (/= 0) <<< fst $ Seed.nextInteger 0 1 seed
 
 ------------------------------------------------------------------------
 -- Combinators - Characters
@@ -1079,13 +1079,13 @@ string =
 --
 text :: MonadGen m => Range Int -> m Char -> m Text
 text range =
-  fmap Text.pack . string range
+  fmap Text.pack <<< string range
 
 -- | Generates a UTF-8 encoded string, using 'Range' to determine the length.
 --
 utf8 :: MonadGen m => Range Int -> m Char -> m ByteString
 utf8 range =
-  fmap Text.encodeUtf8 . text range
+  fmap Text.encodeUtf8 <<< text range
 
 -- | Generates a random 'ByteString', using 'Range' to determine the
 --   length.
@@ -1094,12 +1094,12 @@ bytes :: MonadGen m => Range Int -> m ByteString
 bytes range =
   fmap ByteString.pack $
   choice [
-      list range . word8 $
+      list range <<< word8 $
         Range.constant
           (fromIntegral $ Char.ord 'a')
           (fromIntegral $ Char.ord 'z')
 
-    , list range . word8 $
+    , list range <<< word8 $
         Range.constant minBound maxBound
     ]
 
@@ -1335,17 +1335,17 @@ list :: MonadGen m => Range Int -> m a -> m [a]
 list range gen =
   let
      interleave =
-       (interleaveTreeT . nodeValue =<<)
+       (interleaveTreeT <<< nodeValue =<<)
   in
     sized $ \size ->
-      ensure (atLeast $ Range.lowerBound size range) .
-      withGenT (mapGenT (TreeT . interleave . runTreeT)) $ do
+      ensure (atLeast $ Range.lowerBound size range) <<<
+      withGenT (mapGenT (TreeT <<< interleave <<< runTreeT)) $ do
         n <- integral_ range
         replicateM n (toTreeMaybeT gen)
 
 interleaveTreeT :: Monad m => [TreeT m a] -> m (NodeT m [a])
 interleaveTreeT =
-  fmap Tree.interleave . traverse runTreeT
+  fmap Tree.interleave <<< traverse runTreeT
 
 -- | Generates a seq using a 'Range' to determine the length.
 --
@@ -1372,7 +1372,7 @@ nonEmpty range gen = do
 --
 set :: (MonadGen m, Ord a) => Range Int -> m a -> m (Set a)
 set range gen =
-  fmap Map.keysSet . map range $ fmap (, ()) gen
+  fmap Map.keysSet <<< map range $ fmap (, ()) gen
 
 -- | Generates a map using a 'Range' to determine the length.
 --
@@ -1383,9 +1383,9 @@ set range gen =
 map :: (MonadGen m, Ord k) => Range Int -> m (k, v) -> m (Map k v)
 map range gen =
   sized $ \size ->
-    ensure ((>= Range.lowerBound size range) . Map.size) .
-    fmap Map.fromList .
-    (sequence =<<) .
+    ensure ((>= Range.lowerBound size range) <<< Map.size) <<<
+    fmap Map.fromList <<<
+    (sequence =<<) <<<
     shrink Shrink.list $ do
       k <- integral_ range
       uniqueByKey k gen
@@ -1426,7 +1426,7 @@ atLeast n =
   if n == 0 then
     const True
   else
-    not . null . drop (n - 1)
+    not <<< null <<< drop (n - 1)
 
 ------------------------------------------------------------------------
 -- Combinators - Subterms
@@ -1460,12 +1460,12 @@ freeze :: MonadGen m => m a -> m (a, m a)
 freeze =
   withGenT $ \gen ->
     GenT $ \size seed -> do
-      mx <- lift . lift . runMaybeT . runTreeT $ runGenT size seed gen
+      mx <- lift <<< lift <<< runMaybeT <<< runTreeT $ runGenT size seed gen
       case mx of
         Nothing ->
           empty
         Just (NodeT x xs) ->
-          pure (x, fromGenT . fromTreeMaybeT . Tree.fromNodeT $ NodeT x xs)
+          pure (x, fromGenT <<< fromTreeMaybeT <<< Tree.fromNodeT $ NodeT x xs)
 
 shrinkSubterms :: Subterms n a -> [Subterms n a]
 shrinkSubterms = case _ of
@@ -1476,10 +1476,10 @@ shrinkSubterms = case _ of
 
 genSubterms :: MonadGen m => Vec n (m a) -> m (Subterms n a)
 genSubterms =
-  (sequence =<<) .
-  shrink shrinkSubterms .
-  fmap All .
-  mapM (fmap snd . freeze)
+  (sequence =<<) <<<
+  shrink shrinkSubterms <<<
+  fmap All <<<
+  mapM (fmap snd <<< freeze)
 
 fromSubterms :: Applicative m => (Vec n a -> m a) -> Subterms n a -> m a
 fromSubterms f = case _ of
@@ -1569,7 +1569,7 @@ shuffle :: MonadGen m => [a] -> m [a]
 -- element logarithmic instead of linear, and to make length calculation
 -- constant-time instead of linear. We could probably do better, but
 -- this is at least reasonably quick.
-shuffle = fmap toList . shuffleSeq . Seq.fromList
+shuffle = fmap toList <<< shuffleSeq <<< Seq.fromList
 
 -- | Generates a random permutation of a sequence.
 --
@@ -1702,7 +1702,7 @@ printTree gen = do
 --
 printTreeWith :: (MonadIO m, Show a) => Size -> Seed -> Gen a -> m ()
 printTreeWith size seed gen = do
-  liftEffect . putStr $
+  liftEffect <<< putStr $
     renderTree size seed gen
 
 -- | Render the shrink tree produced by a generator, for the given size and

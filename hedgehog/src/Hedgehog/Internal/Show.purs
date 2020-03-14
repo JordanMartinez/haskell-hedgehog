@@ -54,8 +54,8 @@ renderValue =
 
 renderValueDiff :: ValueDiff -> String
 renderValueDiff =
-  unlines .
-  fmap renderLineDiff .
+  unlines <<<
+  fmap renderLineDiff <<<
   toLineDiff
 
 renderLineDiff :: LineDiff -> String
@@ -81,9 +81,9 @@ lineDiff x y =
 
 toLineDiff :: ValueDiff -> [LineDiff]
 toLineDiff =
-  concatMap (mkLineDiff 0 "") .
-  collapseOpen .
-  dropLeadingSep .
+  concatMap (mkLineDiff 0 "") <<<
+  collapseOpen <<<
+  dropLeadingSep <<<
   mkDocDiff 0
 
 valueDiff :: Value -> Value -> ValueDiff
@@ -239,12 +239,12 @@ mkDocDiff indent = case _ of
 
   ValueTuple xs ->
     [DocOpen indent "("] ++
-    fmap (DocItem indent ", " . mkDocDiff 0) xs ++
+    fmap (DocItem indent ", " <<< mkDocDiff 0) xs ++
     [DocClose indent ")"]
 
   ValueList xs ->
     [DocOpen indent "["] ++
-    fmap (DocItem indent ", " . mkDocDiff 0) xs ++
+    fmap (DocItem indent ", " <<< mkDocDiff 0) xs ++
     [DocClose indent "]"]
 
   ValueDiff x y ->
@@ -261,12 +261,12 @@ oneLiner x =
 
 same :: Int -> String -> [DocDiff]
 same indent =
-  fmap (DocSame indent) . lines
+  fmap (DocSame indent) <<< lines
 
 removed :: Int -> String -> [DocDiff]
 removed indent =
-  fmap (DocRemoved indent) . lines
+  fmap (DocRemoved indent) <<< lines
 
 added :: Int -> String -> [DocDiff]
 added indent =
-  fmap (DocAdded indent) . lines
+  fmap (DocAdded indent) <<< lines

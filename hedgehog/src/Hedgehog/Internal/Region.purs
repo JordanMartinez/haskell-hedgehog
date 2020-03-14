@@ -84,7 +84,7 @@ displayRegion ::
   => (Region -> m a)
   -> m a
 displayRegion =
-  displayRegions . bracket newOpenRegion finishRegion
+  displayRegions <<<$1bracket newOpenRegion finishRegion
 
 moveToBottom :: Region -> STM ()
 moveToBottom (Region var) =

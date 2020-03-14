@@ -73,9 +73,9 @@ data Seed =
 instance Show Seed where
   showsPrec p (Seed v g) =
     showParen (p > 10) $
-      showString "Seed " .
-      showsPrec 11 v .
-      showChar ' ' .
+      showString "Seed " <<<
+      showsPrec 11 v <<<
+      showChar ' ' <<<
       showsPrec 11 g
 
 instance Read Seed where
@@ -206,7 +206,7 @@ mixGamma x =
 #if (SIZEOF_HSINT == 8)
 instance RandomGen Seed where
   next =
-    first fromIntegral . nextWord64
+    first fromIntegral <<< nextWord64
   genRange _ =
     (fromIntegral (minBound :: Int64), fromIntegral (maxBound :: Int64))
   split =
@@ -214,7 +214,7 @@ instance RandomGen Seed where
 #else
 instance RandomGen Seed where
   next =
-    first fromIntegral . nextWord32
+    first fromIntegral <<< nextWord32
   genRange _ =
     (fromIntegral (minBound :: Int32), fromIntegral (maxBound :: Int32))
   split =

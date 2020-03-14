@@ -183,7 +183,7 @@ instance (Ord a, Ord1 v) => Ord (Var a v) where
 instance (Show a, Show1 v) => Show (Var a v) where
   showsPrec p (Var x) =
     showParen (p >= 11) $
-      showString "Var " .
+      showString "Var " <<<
       showsPrec1 11 x
 
 instance HTraversable (Var a) where
@@ -215,13 +215,13 @@ emptyEnvironment =
 
 unionsEnvironment :: [Environment] -> Environment
 unionsEnvironment =
-  Environment . Map.unions . fmap unEnvironment
+  Environment <<< Map.unions <<< fmap unEnvironment
 
 -- | Insert a symbolic / concrete pairing in to the environment.
 --
 insertConcrete :: Symbolic a -> Concrete a -> Environment -> Environment
 insertConcrete (Symbolic k) (Concrete v) =
-  Environment . Map.insert k (toDyn v) . unEnvironment
+  Environment <<< Map.insert k (toDyn v) <<< unEnvironment
 
 -- | Cast a 'Dynamic' in to a concrete value.
 --
@@ -417,9 +417,9 @@ data Action m (state :: (* -> *) -> *) =
 instance Show (Action m state) where
   showsPrec p (Action input (Symbolic (Name output)) _ _ _ _) =
     showParen (p > 10) $
-      showString "Var " .
-      showsPrec 11 output .
-      showString " :<- " .
+      showString "Var " <<<
+      showsPrec 11 output <<<
+      showString " :<- " <<<
       showsPrec 11 input
 
 -- | Extract the variable name and the type from a symbolic value.
@@ -513,7 +513,7 @@ dropInvalid =
       else
         pure Nothing
   in
-    fmap Maybe.catMaybes . traverse loop
+    fmap Maybe.catMaybes <<< traverse loop
 
 -- | Generates a single action from a set of possible commands.
 --
@@ -544,7 +544,7 @@ action commands =
       contextUpdate $
         callbackUpdate callbacks state0 input (Var output)
 
-      pure . Just $
+      pure <<< Just $
         Action input output exec
           (callbackRequire callbacks)
           (callbackUpdate callbacks)
@@ -557,7 +557,7 @@ genActions ::
   -> Context state
   -> gen ([Action m state], Context state)
 genActions range commands ctx = do
-  xs <- Gen.fromGenT . (`evalStateT` ctx) . distributeT $ Gen.list range (action commands)
+  xs <- Gen.fromGenT <<< (`evalStateT` ctx) <<< distributeT $ Gen.list range (action commands)
   pure $
     dropInvalid xs `runState` ctx
 
@@ -626,7 +626,7 @@ sequential ::
   -> [Command gen m state]
   -> gen (Sequential m state)
 sequential range initial commands =
-  fmap (Sequential . fst) $
+  fmap (Sequential <<< fst) $
     genActions range commands (mkContext initial)
 
 -- | A sequential prefix of actions to execute, with two branches to execute in parallel.
@@ -784,7 +784,7 @@ linearize initial branch1 branch2 =
   withFrozenCallStack $
     let
       ok =
-        any successful .
+        any successful <<<
         fmap (checkActions initial) $
         interleave branch1 branch2
     in

@@ -32,13 +32,13 @@ discoverPrefix prefix = do
   let
     startLine =
       Ord.comparing $
-        posLine .
-        posPostion .
-        propertySource .
+        posLine <<<
+        posPostion <<<
+        propertySource <<<
         snd
 
     names =
-      fmap (mkNamedProperty . fst) $
+      fmap (mkNamedProperty <<< fst) $
       List.sortBy startLine properties
 
   [|| Group $$(moduleName) $$(listTE names) ||]
@@ -49,15 +49,15 @@ mkNamedProperty name = do
 
 unsafeProperty :: PropertyName -> TExpQ Property
 unsafeProperty =
-  unsafeTExpCoerce . pure . VarE . mkName . unPropertyName
+  unsafeTExpCoerce <<< pure <<< VarE <<< mkName <<< unPropertyName
 
 listTE :: [TExpQ a] -> TExpQ [a]
 listTE xs = do
-  unsafeTExpCoerce . pure . ListE =<< traverse unTypeQ xs
+  unsafeTExpCoerce <<< pure <<< ListE =<< traverse unTypeQ xs
 
 moduleName :: TExpQ GroupName
 moduleName = do
-  loc <- GroupName . loc_module <$> location
+  loc <- GroupName <<< loc_module <$> location
   [|| loc ||]
 
 getCurrentFile :: Q FilePath

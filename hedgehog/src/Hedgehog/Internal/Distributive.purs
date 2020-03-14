@@ -42,28 +42,28 @@ class MonadTransDistributive g where
 
 instance MonadTransDistributive IdentityT where
   distributeT m =
-    lift . IdentityT . pure =<< hoist lift (runIdentityT m)
+    lift <<< IdentityT <<< pure =<< hoist lift (runIdentityT m)
 
 instance MonadTransDistributive MaybeT where
   distributeT m =
-    lift . MaybeT . pure =<< hoist lift (runMaybeT m)
+    lift <<< MaybeT <<< pure =<< hoist lift (runMaybeT m)
 
 instance MonadTransDistributive (ExceptT x) where
   distributeT m =
-    lift . ExceptT . pure =<< hoist lift (runExceptT m)
+    lift <<< ExceptT <<< pure =<< hoist lift (runExceptT m)
 
 instance MonadTransDistributive (ReaderT r) where
   distributeT m =
-    join . lift . ReaderT $ \r ->
-      pure . hoist lift $ runReaderT m r
+    join <<< lift <<< ReaderT $ \r ->
+      pure <<< hoist lift $ runReaderT m r
 
 instance Monoid w => MonadTransDistributive (Lazy.WriterT w) where
   distributeT m =
-    lift . Lazy.WriterT . pure =<< hoist lift (Lazy.runWriterT m)
+    lift <<< Lazy.WriterT <<< pure =<< hoist lift (Lazy.runWriterT m)
 
 instance Monoid w => MonadTransDistributive (Strict.WriterT w) where
   distributeT m = do
-    lift . Strict.WriterT . pure =<< hoist lift (Strict.runWriterT m)
+    lift <<< Strict.WriterT <<< pure =<< hoist lift (Strict.runWriterT m)
 
 instance MonadTransDistributive (Lazy.StateT s) where
   distributeT m = do
@@ -82,7 +82,7 @@ instance MonadTransDistributive (Strict.StateT s) where
 instance Monoid w => MonadTransDistributive (Lazy.RWST r w s) where
   distributeT m = do
     -- ask and get combined
-    (r, s0)    <- lift . Lazy.RWST $ \r s -> return ((r, s), s, mempty)
+    (r, s0)    <- lift <<< Lazy.RWST $ \r s -> return ((r, s), s, mempty)
     (a, s1, w) <- hoist lift (Lazy.runRWST m r s0)
     -- tell and put combined
     lift $ Lazy.RWST $ \_ _ -> return (a, s1, w)
@@ -90,7 +90,7 @@ instance Monoid w => MonadTransDistributive (Lazy.RWST r w s) where
 instance Monoid w => MonadTransDistributive (Strict.RWST r w s) where
   distributeT m = do
     -- ask and get combined
-    (r, s0)    <- lift . Strict.RWST $ \r s -> return ((r, s), s, mempty)
+    (r, s0)    <- lift <<< Strict.RWST $ \r s -> return ((r, s), s, mempty)
     (a, s1, w) <- hoist lift (Strict.runRWST m r s0)
     -- tell and put combined
     lift $ Strict.RWST $ \_ _ -> return (a, s1, w)

@@ -57,7 +57,7 @@ towardsFloat destination x =
       ok y =
         y /= x && not (isNaN y) && not (isInfinite y)
     in
-      takeWhile ok .
+      takeWhile ok <<<
       fmap (x -) $
       iterate (/ 2) diff
 
@@ -112,7 +112,7 @@ removes k0 xs0 =
 --
 halves :: Integral a => a -> [a]
 halves =
-  takeWhile (/= 0) . iterate (`quot` 2)
+  takeWhile (/= 0) <<< iterate (`quot` 2)
 
 -- | Cons an element on to the front of a list unless it is already there.
 --

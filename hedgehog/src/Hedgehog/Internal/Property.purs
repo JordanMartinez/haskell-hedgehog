@@ -188,8 +188,8 @@ deriving instance MonadBaseControl b m => MonadBaseControl b (PropertyT m)
 #else
 instance MonadBaseControl b m => MonadBaseControl b (PropertyT m) where
   type StM (PropertyT m) a = StM (TestT (GenT m)) a
-  liftBaseWith f = PropertyT $ liftBaseWith $ \rib -> f (rib . unPropertyT)
-  restoreM = PropertyT . restoreM
+  liftBaseWith f = PropertyT $ liftBaseWith $ \rib -> f (rib <<< unPropertyT)
+  restoreM = PropertyT <<< restoreM
 #endif
 
 -- | A test monad allows the assertion of expectations.
@@ -471,19 +471,19 @@ instance Monad m => Monad (TestT m) where
   (>>=) m k =
     TestT $
       unTest m >>=
-      unTest . k
+      unTest <<< k
 
 instance Monad m => MonadFail (TestT m) where
   fail err =
-    TestT . ExceptT . pure . Left $ Failure Nothing err Nothing
+    TestT <<< ExceptT <<< pure <<< Left $ Failure Nothing err Nothing
 
 instance MonadTrans TestT where
   lift =
-    TestT . lift . lift
+    TestT <<< lift <<< lift
 
 instance MFunctor TestT where
   hoist f =
-    TestT . hoist (hoist f) . unTest
+    TestT <<< hoist (hoist f) <<< unTest
 
 instance MonadTransDistributive TestT where
   type Transformer t TestT m = (
@@ -492,37 +492,37 @@ instance MonadTransDistributive TestT where
     )
 
   distributeT =
-    hoist TestT .
-    distributeT .
-    hoist distributeT .
+    hoist TestT <<<
+    distributeT <<<
+    hoist distributeT <<<
     unTest
 
 instance PrimMonad m => PrimMonad (TestT m) where
   type PrimState (TestT m) =
     PrimState m
   primitive =
-    lift . primitive
+    lift <<< primitive
 
 -- FIXME instance MonadWriter w m => MonadWriter w (TestT m)
 
 instance MonadError e m => MonadError e (TestT m) where
   throwError =
-    lift . throwError
+    lift <<< throwError
   catchError m onErr =
-    TestT . ExceptT $
+    TestT <<< ExceptT $
       (runExceptT $ unTest m) `catchError`
-      (runExceptT . unTest . onErr)
+      (runExceptT <<< unTest <<< onErr)
 
 instance MonadResource m => MonadResource (TestT m) where
   liftResourceT =
-    lift . liftResourceT
+    lift <<< liftResourceT
 
 instance MonadTransControl TestT where
   type StT TestT a =
     (Either Failure a, Journal)
 
   liftWith f =
-    mkTestT . fmap (, mempty) . fmap Right $ f $ runTestT
+    mkTestT <<< fmap (, mempty) <<< fmap Right $ f $ runTestT
 
   restoreT =
     mkTestT
@@ -542,71 +542,71 @@ class Monad m => MonadTest m where
 
 instance Monad m => MonadTest (TestT m) where
   liftTest =
-    hoist (pure . runIdentity)
+    hoist (pure <<< runIdentity)
 
 instance MonadTest m => MonadTest (IdentityT m) where
   liftTest =
-    lift . liftTest
+    lift <<< liftTest
 
 instance MonadTest m => MonadTest (MaybeT m) where
   liftTest =
-    lift . liftTest
+    lift <<< liftTest
 
 instance MonadTest m => MonadTest (ExceptT x m) where
   liftTest =
-    lift . liftTest
+    lift <<< liftTest
 
 instance MonadTest m => MonadTest (ReaderT r m) where
   liftTest =
-    lift . liftTest
+    lift <<< liftTest
 
 instance MonadTest m => MonadTest (Lazy.StateT s m) where
   liftTest =
-    lift . liftTest
+    lift <<< liftTest
 
 instance MonadTest m => MonadTest (Strict.StateT s m) where
   liftTest =
-    lift . liftTest
+    lift <<< liftTest
 
 instance (MonadTest m, Monoid w) => MonadTest (Lazy.WriterT w m) where
   liftTest =
-    lift . liftTest
+    lift <<< liftTest
 
 instance (MonadTest m, Monoid w) => MonadTest (Strict.WriterT w m) where
   liftTest =
-    lift . liftTest
+    lift <<< liftTest
 
 instance (MonadTest m, Monoid w) => MonadTest (Lazy.RWST r w s m) where
   liftTest =
-    lift . liftTest
+    lift <<< liftTest
 
 instance (MonadTest m, Monoid w) => MonadTest (Strict.RWST r w s m) where
   liftTest =
-    lift . liftTest
+    lift <<< liftTest
 
 instance MonadTest m => MonadTest (ContT r m) where
   liftTest =
-    lift . liftTest
+    lift <<< liftTest
 
 instance MonadTest m => MonadTest (ResourceT m) where
   liftTest =
-    lift . liftTest
+    lift <<< liftTest
 
 mkTestT :: m (Either Failure a, Journal) -> TestT m a
 mkTestT =
-  TestT . ExceptT . Lazy.WriterT
+  TestT <<< ExceptT <<< Lazy.WriterT
 
 mkTest :: (Either Failure a, Journal) -> Test a
 mkTest =
-  mkTestT . Identity
+  mkTestT <<< Identity
 
 runTestT :: TestT m a -> m (Either Failure a, Journal)
 runTestT =
-  Lazy.runWriterT . runExceptT . unTest
+  Lazy.runWriterT <<< runExceptT <<< unTest
 
 runTest :: Test a -> (Either Failure a, Journal)
 runTest =
-  runIdentity . runTestT
+  runIdentity <<< runTestT
 
 -- | Log some information which might be relevant to a potential test failure.
 --
@@ -640,14 +640,14 @@ annotateShow x = do
 --
 footnote :: MonadTest m => String -> m ()
 footnote =
-  writeLog . Footnote
+  writeLog <<< Footnote
 
 -- | Logs a value to be displayed as additional information in the footer of
 --   the failure report.
 --
 footnoteShow :: (MonadTest m, Show a) => a -> m ()
 footnoteShow =
-  writeLog . Footnote . showPretty
+  writeLog <<< Footnote <<< showPretty
 
 -- | Fails with an error that shows the difference between two values.
 failDiff :: (MonadTest m, Show a, Show b, HasCallStack) => a -> b -> m ()
@@ -797,7 +797,7 @@ evalExceptT m =
 
 instance MonadTrans PropertyT where
   lift =
-    PropertyT . lift . lift
+    PropertyT <<< lift <<< lift
 
 instance Monad m => MonadFail (PropertyT m) where
   fail err =
@@ -805,7 +805,7 @@ instance Monad m => MonadFail (PropertyT m) where
 
 instance MFunctor PropertyT where
   hoist f =
-    PropertyT . hoist (hoist f) . unPropertyT
+    PropertyT <<< hoist (hoist f) <<< unPropertyT
 
 instance MonadTransDistributive PropertyT where
   type Transformer t PropertyT m = (
@@ -814,29 +814,29 @@ instance MonadTransDistributive PropertyT where
     )
 
   distributeT =
-    hoist PropertyT .
-    distributeT .
-    hoist distributeT .
+    hoist PropertyT <<<
+    distributeT <<<
+    hoist distributeT <<<
     unPropertyT
 
 instance PrimMonad m => PrimMonad (PropertyT m) where
   type PrimState (PropertyT m) =
     PrimState m
   primitive =
-    lift . primitive
+    lift <<< primitive
 
 ---- FIXME instance MonadWriter w m => MonadWriter w (PropertyT m)
 
 instance Monad m => MonadTest (PropertyT m) where
   liftTest =
-    PropertyT . hoist (pure . runIdentity)
+    PropertyT <<< hoist (pure <<< runIdentity)
 
 instance MonadPlus m => MonadPlus (PropertyT m) where
   mzero =
     discard
 
   mplus (PropertyT x) (PropertyT y) =
-    PropertyT . mkTestT $
+    PropertyT <<< mkTestT $
       mplus (runTestT x) (runTestT y)
 
 instance MonadPlus m => Alternative (PropertyT m) where
@@ -900,7 +900,7 @@ discard =
 --
 test :: Monad m => TestT m a -> PropertyT m a
 test =
-  PropertyT . hoist lift
+  PropertyT <<< hoist lift
 
 ------------------------------------------------------------------------
 -- Property
@@ -1081,11 +1081,11 @@ labelCovered tests (MkLabel _ _ minimum_ population) =
 -- | All labels are covered
 coverageSuccess :: TestCount -> Coverage CoverCount -> Bool
 coverageSuccess tests =
-  null . coverageFailures tests
+  null <<< coverageFailures tests
 
 coverageFailures :: TestCount -> Coverage CoverCount -> [Label CoverCount]
 coverageFailures tests (Coverage kvs) =
-  List.filter (not . labelCovered tests) (Map.elems kvs)
+  List.filter (not <<< labelCovered tests) (Map.elems kvs)
 
 -- | Is true when the test coverage satisfies the specified 'Confidence'
 --   contstraint for all 'Coverage CoverCount's
@@ -1097,7 +1097,7 @@ confidenceSuccess tests confidence =
       fst (boundsForLabel tests confidence coverCount)
         >= unCoverPercentage labelMinimum / 100.0
   in
-    and . fmap assertLow . Map.elems . coverageLabels
+    and <<< fmap assertLow <<< Map.elems <<< coverageLabels
 
 -- | Is true when there exists a label that is sure to have failed according to
 --   the 'Confidence' constraint
@@ -1109,7 +1109,7 @@ confidenceFailure tests confidence =
       snd (boundsForLabel tests confidence coverCount)
         < (unCoverPercentage labelMinimum / 100.0)
   in
-    or . fmap assertHigh . Map.elems . coverageLabels
+    or <<< fmap assertHigh <<< Map.elems <<< coverageLabels
 
 boundsForLabel :: TestCount -> Confidence -> Label CoverCount -> (Double, Double)
 boundsForLabel tests confidence MkLabel{..} =
@@ -1156,13 +1156,13 @@ fromLabel x =
 
 unionsCoverage :: Semigroup a => [Coverage a] -> Coverage a
 unionsCoverage =
-  Coverage .
-  Map.unionsWith (<>) .
+  Coverage <<<
+  Map.unionsWith (<>) <<<
   fmap coverageLabels
 
 journalCoverage :: Journal -> Coverage CoverCount
 journalCoverage (Journal logs) =
-  fmap toCoverCount .
+  fmap toCoverCount <<<
   unionsCoverage $ do
     Label x <- logs
     pure (fromLabel x)
@@ -1191,7 +1191,7 @@ cover minimum_ name covered =
       else
         NoCover
   in
-    writeLog . Label $
+    writeLog <<< Label $
       MkLabel name (getCaller callStack) minimum_ cover_
 
 -- | Records the proportion of tests which satisfy a given condition.

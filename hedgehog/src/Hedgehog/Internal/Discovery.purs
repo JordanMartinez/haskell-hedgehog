@@ -41,9 +41,9 @@ readDeclaration path line = do
   mfile <- liftEffect $ readFileSafe path
   pure $ do
     file <- mfile
-    takeHead .
-      List.sortBy (Ord.comparing $ Ord.Down . posLine . posPostion . snd) .
-      filter ((<= line) . posLine . posPostion . snd) $
+    takeHead <<<
+      List.sortBy (Ord.comparing $ Ord.Down <<< posLine <<< posPostion <<< snd) <<<
+      filter ((<= line) <<< posLine <<< posPostion <<< snd) $
       Map.toList (findDeclarations path file)
 
 readFileSafe :: forall m. MonadEffect m => FilePath -> m (Maybe String)
@@ -60,15 +60,15 @@ takeHead = case _ of
 
 findProperties :: String -> FilePath -> String -> Map PropertyName PropertySource
 findProperties prefix path =
-  Map.map PropertySource .
-  Map.mapKeysMonotonic PropertyName .
-  Map.filterWithKey (\k _ -> List.isPrefixOf prefix k) .
+  Map.map PropertySource <<<
+  Map.mapKeysMonotonic PropertyName <<<
+  Map.filterWithKey (\k _ -> List.isPrefixOf prefix k) <<<
   findDeclarations path
 
 findDeclarations :: FilePath -> String -> Map String (Pos String)
 findDeclarations path =
-  declarations .
-  classified .
+  declarations <<<
+  classified <<<
   positioned path
 
 ------------------------------------------------------------------------
@@ -87,7 +87,7 @@ declarations =
         in
           tagWithName (forget x $ trimEnd ys) : loop zs
   in
-    Map.fromListWith (<>) . loop . dropWhile (not . isDeclaration)
+    Map.fromListWith (<>) <<< loop <<< dropWhile (not <<< isDeclaration)
 
 trimEnd :: [Classified (Pos Char)] -> [Classified (Pos Char)]
 trimEnd xs =
@@ -128,7 +128,7 @@ takeName xs =
 forget :: Classified (Pos Char) -> [Classified (Pos Char)] -> Pos String
 forget (Classified _ (Pos p x)) xs =
   Pos p $
-    x : fmap (posValue . classifiedValue) xs
+    x : fmap (posValue <<< classifiedValue) xs
 
 isDeclaration :: Classified (Pos Char) -> Bool
 isDeclaration (Classified c (Pos p x)) =

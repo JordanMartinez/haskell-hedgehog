@@ -87,7 +87,7 @@ isFailure = case _ of
 
 isSuccess :: NodeT m (Maybe (Either x a, b)) -> Bool
 isSuccess =
-  not . isFailure
+  not <<< isFailure
 
 runTreeN ::
      Monad m
@@ -151,7 +151,7 @@ checkReport ::
 checkReport cfg size0 seed0 test0 updateUI =
   let
     test =
-      catchAll test0 (fail . show)
+      catchAll test0 (fail <<< show)
 
     terminationCriteria =
       propertyTerminationCriteria cfg
@@ -211,7 +211,7 @@ checkReport cfg size0 seed0 test0 updateUI =
           Report tests discards coverage0 OK
 
         failureReport message =
-          Report tests discards coverage0 . Failed $ mkFailure
+          Report tests discards coverage0 <<< Failed $ mkFailure
             size
             seed
             0
@@ -255,7 +255,7 @@ checkReport cfg size0 seed0 test0 updateUI =
         case Seed.split seed of
           (s0, s1) -> do
             node@(NodeT x _) <-
-              runTreeT . evalGenT size s0 . runTestT $ unPropertyT test
+              runTreeT <<< evalGenT size s0 <<< runTestT $ unPropertyT test
             case x of
               Nothing ->
                 loop tests (discards + 1) (size + 1) s1 coverage0
@@ -272,7 +272,7 @@ checkReport cfg size0 seed0 test0 updateUI =
                       0
                       (propertyShrinkLimit cfg)
                       (propertyShrinkRetries cfg)
-                      (updateUI . mkReport)
+                      (updateUI <<< mkReport)
                       node
 
               Just (Right (), journal) ->
@@ -331,8 +331,8 @@ checkNamed region color name prop = do
 check :: forall m. MonadEffect m => Property -> m Bool
 check prop = do
   color <- detectColor
-  liftEffect . displayRegion $ \region ->
-    (== OK) . reportStatus <$> checkNamed region color Nothing prop
+  liftEffect <<< displayRegion $ \region ->
+    (== OK) <<< reportStatus <$> checkNamed region color Nothing prop
 
 -- | Check a property using a specific size and seed.
 --
@@ -340,7 +340,7 @@ recheck :: forall m. MonadEffect m => Size -> Seed -> Property -> m ()
 recheck size seed prop0 = do
   color <- detectColor
   let prop = withTests 1 prop0
-  _ <- liftEffect . displayRegion $ \region ->
+  _ <- liftEffect <<< displayRegion $ \region ->
     checkRegion region color Nothing size seed prop
   pure ()
 
@@ -383,7 +383,7 @@ checkGroupWith ::
   -> IO Summary
 checkGroupWith n verbosity color props =
   displayRegion $ \sregion -> do
-    svar <- atomically . TVar.newTVar $ mempty { summaryWaiting = PropertyCount (length props) }
+    svar <- atomically <<< TVar.newTVar $ mempty { summaryWaiting = PropertyCount (length props) }
 
     let
       start (TasksRemaining tasks) _ix (name, prop) =
@@ -417,7 +417,7 @@ checkGroupWith n verbosity color props =
         finishRegion region
 
     summary <-
-      fmap (mconcat . fmap (fromResult . reportStatus)) $
+      fmap (mconcat <<< fmap (fromResult <<< reportStatus)) $
         runTasks n props start finish finalize $ \(name, prop, region) -> do
           result <- checkNamed region color (Just name) prop
           updateSummary sregion svar color
