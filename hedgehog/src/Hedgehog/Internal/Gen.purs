@@ -153,7 +153,7 @@ import           Control.Monad.Catch (MonadThrow(..), MonadCatch(..))
 import           Control.Monad.Error.Class (MonadError(..))
 import           Control.Monad.IO.Class (MonadIO(..))
 import           Control.Monad.Morph (MFunctor(..), MMonad(..))
-import qualified Control.Monad.Morph as Morph
+-- import qualified Control.Monad.Morph as Morph
 import           Control.Monad.Primitive (PrimMonad(..))
 import           Control.Monad.Reader.Class (MonadReader(..))
 import           Control.Monad.State.Class (MonadState(..))
@@ -163,46 +163,46 @@ import           Control.Monad.Trans.Identity (IdentityT(..))
 import           Control.Monad.Trans.Maybe (MaybeT(..))
 import           Control.Monad.Trans.Reader (ReaderT(..))
 import           Control.Monad.Trans.Resource (MonadResource(..))
-import qualified Control.Monad.Trans.State.Lazy as Lazy
-import qualified Control.Monad.Trans.State.Strict as Strict
-import qualified Control.Monad.Trans.Writer.Lazy as Lazy
-import qualified Control.Monad.Trans.Writer.Strict as Strict
+-- import qualified Control.Monad.Trans.State.Lazy as Lazy
+-- import qualified Control.Monad.Trans.State.Strict as Strict
+-- import qualified Control.Monad.Trans.Writer.Lazy as Lazy
+-- import qualified Control.Monad.Trans.Writer.Strict as Strict
 import           Control.Monad.Writer.Class (MonadWriter(..))
 import           Control.Monad.Zip (MonadZip(..))
 
 import           Data.Bifunctor (first)
 import           Data.ByteString (ByteString)
-import qualified Data.ByteString as ByteString
-import qualified Data.Char as Char
+-- import qualified Data.ByteString as ByteString
+-- import qualified Data.Char as Char
 import           Data.Foldable (for_, toList)
 import           Data.Functor.Identity (Identity(..))
 import           Data.Int (Int8, Int16, Int32, Int64)
 import           Data.List.NonEmpty (NonEmpty)
-import qualified Data.List.NonEmpty as NonEmpty
+-- import qualified Data.List.NonEmpty as NonEmpty
 import           Data.Map (Map)
-import qualified Data.Map as Map
-import qualified Data.Maybe as Maybe
-import qualified Data.Semigroup as Semigroup
+-- import qualified Data.Map as Map
+-- import qualified Data.Maybe as Maybe
+-- import qualified Data.Semigroup as Semigroup
 import           Data.Sequence (Seq)
-import qualified Data.Sequence as Seq
+-- import qualified Data.Sequence as Seq
 import           Data.Set (Set)
 import           Data.Text (Text)
-import qualified Data.Text as Text
-import qualified Data.Text.Encoding as Text
+-- import qualified Data.Text as Text
+-- import qualified Data.Text.Encoding as Text
 import           Data.Word (Word8, Word16, Word32, Word64)
 
 import           Hedgehog.Internal.Distributive (MonadTransDistributive(..))
 import           Hedgehog.Internal.Prelude hiding (maybe, seq)
 import           Hedgehog.Internal.Seed (Seed)
-import qualified Hedgehog.Internal.Seed as Seed
-import qualified Hedgehog.Internal.Shrink as Shrink
+-- import qualified Hedgehog.Internal.Seed as Seed
+-- import qualified Hedgehog.Internal.Shrink as Shrink
 import           Hedgehog.Internal.Tree (Tree, TreeT(..), NodeT(..))
-import qualified Hedgehog.Internal.Tree as Tree
+-- import qualified Hedgehog.Internal.Tree as Tree
 import           Hedgehog.Range (Size, Range)
-import qualified Hedgehog.Range as Range
+-- import qualified Hedgehog.Range as Range
 
 #if __GLASGOW_HASKELL__ < 808
-import qualified Control.Monad.Fail as Fail
+-- import qualified Control.Monad.Fail as Fail
 #endif
 #if __GLASGOW_HASKELL__ < 806
 import           Data.Coerce (coerce)

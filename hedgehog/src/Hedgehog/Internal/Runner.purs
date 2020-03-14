@@ -16,7 +16,7 @@ module Hedgehog.Internal.Runner (
   ) where
 
 import           Control.Concurrent.STM (TVar, atomically)
-import qualified Control.Concurrent.STM.TVar as TVar
+-- import qualified Control.Concurrent.STM.TVar as TVar
 import           Control.Monad.Catch (MonadCatch(..), catchAll)
 import           Control.Monad.IO.Class (MonadIO(..))
 
@@ -38,7 +38,7 @@ import           Hedgehog.Internal.Queue
 import           Hedgehog.Internal.Region
 import           Hedgehog.Internal.Report
 import           Hedgehog.Internal.Seed (Seed)
-import qualified Hedgehog.Internal.Seed as Seed
+-- import qualified Hedgehog.Internal.Seed as Seed
 import           Hedgehog.Internal.Tree (TreeT(..), NodeT(..))
 import           Hedgehog.Range (Size)
 

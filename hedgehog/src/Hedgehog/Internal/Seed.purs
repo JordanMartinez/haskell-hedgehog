@@ -55,12 +55,12 @@ import           Data.Int (Int32)
 #endif
 import           Data.Time.Clock.POSIX (getPOSIXTime)
 import           Data.IORef (IORef)
-import qualified Data.IORef as IORef
+-- import qualified Data.IORef as IORef
 import           Data.Word (Word32, Word64)
 
 import           System.IO.Unsafe (unsafePerformIO)
 import           System.Random (RandomGen)
-import qualified System.Random as Random
+-- import qualified System.Random as Random
 
 -- | A splittable random number generator.
 --

@@ -14,14 +14,14 @@ module Hedgehog.Internal.Queue (
 import           Control.Concurrent (rtsSupportsBoundThreads)
 import           Control.Concurrent.Async (forConcurrently)
 import           Control.Concurrent.MVar (MVar)
-import qualified Control.Concurrent.MVar as MVar
+-- import qualified Control.Concurrent.MVar as MVar
 import           Control.Monad (when)
 import           Control.Monad.IO.Class (MonadIO(..))
 
 import           Data.Map.Strict (Map)
-import qualified Data.Map.Strict as Map
+-- import qualified Data.Map.Strict as Map
 
-import qualified GHC.Conc as Conc
+-- import qualified GHC.Conc as Conc
 
 import           Hedgehog.Internal.Config
 

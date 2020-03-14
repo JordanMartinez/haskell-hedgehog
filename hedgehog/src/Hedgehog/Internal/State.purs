@@ -36,7 +36,7 @@ module Hedgehog.Internal.State (
   , executeParallel
   ) where
 
-import qualified Control.Concurrent.Async.Lifted as Async
+-- import qualified Control.Concurrent.Async.Lifted as Async
 import           Control.Monad (foldM, foldM_)
 import           Control.Monad.Catch (MonadCatch)
 import           Control.Monad.State.Class (MonadState, get, put, modify)
@@ -51,13 +51,13 @@ import           Data.Foldable (traverse_)
 import           Data.Functor.Classes (Eq1(..), Ord1(..), Show1(..))
 import           Data.Functor.Classes (eq1, compare1, showsPrec1)
 import           Data.Map (Map)
-import qualified Data.Map as Map
-import qualified Data.Maybe as Maybe
+-- import qualified Data.Map as Map
+-- import qualified Data.Maybe as Maybe
 import           Data.Typeable (Typeable, TypeRep, Proxy(..), typeRep)
 
 import           Hedgehog.Internal.Distributive (distributeT)
 import           Hedgehog.Internal.Gen (MonadGen, GenT, GenBase)
-import qualified Hedgehog.Internal.Gen as Gen
+-- import qualified Hedgehog.Internal.Gen as Gen
 import           Hedgehog.Internal.HTraversable (HTraversable(..))
 import           Hedgehog.Internal.Opaque (Opaque(..))
 import           Hedgehog.Internal.Property (MonadTest(..), Test, evalEither, evalM, success, runTest, failWith, annotate)

@@ -53,8 +53,8 @@ import           Data.Functor.Identity (Identity(..))
 import           Data.Functor.Classes (Eq1(..))
 import           Data.Functor.Classes (Show1(..), showsPrec1)
 import           Data.Functor.Classes (showsUnaryWith, showsBinaryWith)
-import qualified Data.List as List
-import qualified Data.Maybe as Maybe
+-- import qualified Data.List as List
+-- import qualified Data.Maybe as Maybe
 
 import           Hedgehog.Internal.Distributive
 import           Control.Monad.Trans.Control (MonadBaseControl (..))

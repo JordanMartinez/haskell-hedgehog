@@ -4,9 +4,9 @@ module Hedgehog.Internal.TH (
   , discoverPrefix
   ) where
 
-import qualified Data.List as List
-import qualified Data.Map as Map
-import qualified Data.Ord as Ord
+-- import qualified Data.List as List
+-- import qualified Data.Map as Map
+-- import qualified Data.Ord as Ord
 
 import           Hedgehog.Internal.Discovery
 import           Hedgehog.Internal.Property

@@ -8,13 +8,13 @@ import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.Identity (IdentityT(..))
 import           Control.Monad.Trans.Except (ExceptT(..), runExceptT)
 import           Control.Monad.Trans.Maybe (MaybeT(..))
-import qualified Control.Monad.Trans.RWS.Lazy as Lazy (RWST(..))
-import qualified Control.Monad.Trans.RWS.Strict as Strict (RWST(..))
+-- import qualified Control.Monad.Trans.RWS.Lazy as Lazy (RWST(..))
+-- import qualified Control.Monad.Trans.RWS.Strict as Strict (RWST(..))
 import           Control.Monad.Trans.Reader (ReaderT(..))
-import qualified Control.Monad.Trans.State.Lazy as Lazy
-import qualified Control.Monad.Trans.State.Strict as Strict
-import qualified Control.Monad.Trans.Writer.Lazy as Lazy
-import qualified Control.Monad.Trans.Writer.Strict as Strict
+-- import qualified Control.Monad.Trans.State.Lazy as Lazy
+-- import qualified Control.Monad.Trans.State.Strict as Strict
+-- import qualified Control.Monad.Trans.Writer.Lazy as Lazy
+-- import qualified Control.Monad.Trans.Writer.Strict as Strict
 
 import           GHC.Exts (Constraint)
 

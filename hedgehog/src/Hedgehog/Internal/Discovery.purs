@@ -11,11 +11,11 @@ module Hedgehog.Internal.Discovery (
 import           Control.Exception (IOException, handle)
 import           Control.Monad.IO.Class (MonadIO(..))
 
-import qualified Data.Char as Char
-import qualified Data.List as List
+-- import qualified Data.Char as Char
+-- import qualified Data.List as List
 import           Data.Map (Map)
-import qualified Data.Map as Map
-import qualified Data.Ord as Ord
+-- import qualified Data.Map as Map
+-- import qualified Data.Ord as Ord
 
 import           Hedgehog.Internal.Property (PropertyName(..))
 import           Hedgehog.Internal.Source (LineNo(..), ColumnNo(..))

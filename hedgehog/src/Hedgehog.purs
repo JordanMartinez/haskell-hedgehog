@@ -9,8 +9,8 @@
 -- > {-# LANGUAGE TemplateHaskell #-}
 -- >
 -- > import           Hedgehog
--- > import qualified Hedgehog.Gen as Gen
--- > import qualified Hedgehog.Range as Range
+-- > -- import qualified Hedgehog.Gen as Gen
+-- > -- import qualified Hedgehog.Range as Range
 --
 -- Once you have your imports set up, you can write a simple property:
 --

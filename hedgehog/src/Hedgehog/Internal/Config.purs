@@ -16,7 +16,7 @@ module Hedgehog.Internal.Config (
 
 import           Control.Monad.IO.Class (MonadIO(..))
 
-import qualified GHC.Conc as Conc
+-- import qualified GHC.Conc as Conc
 
 import           Language.Haskell.TH.Syntax (Lift)
 

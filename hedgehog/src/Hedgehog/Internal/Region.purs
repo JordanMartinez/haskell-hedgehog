@@ -11,13 +11,13 @@ module Hedgehog.Internal.Region (
   ) where
 
 import           Control.Concurrent.STM (STM, TVar)
-import qualified Control.Concurrent.STM.TMVar as TMVar
-import qualified Control.Concurrent.STM.TVar as TVar
+-- import qualified Control.Concurrent.STM.TMVar as TMVar
+-- import qualified Control.Concurrent.STM.TVar as TVar
 import           Control.Monad.Catch (MonadMask(..), bracket)
 import           Control.Monad.IO.Class (MonadIO(..))
 
 import           System.Console.Regions (ConsoleRegion, RegionLayout(..), LiftRegion(..))
-import qualified System.Console.Regions as Console
+-- import qualified System.Console.Regions as Console
 
 
 data Body =

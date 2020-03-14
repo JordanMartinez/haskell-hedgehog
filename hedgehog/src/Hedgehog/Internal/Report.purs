@@ -28,17 +28,17 @@ import           Control.Monad.IO.Class (MonadIO(..))
 import           Control.Monad.Trans.Maybe (MaybeT(..))
 
 import           Data.Bifunctor (bimap, first, second)
-import qualified Data.Char as Char
+-- import qualified Data.Char as Char
 import           Data.Either (partitionEithers)
-import qualified Data.List as List
+-- import qualified Data.List as List
 import           Data.Map (Map)
-import qualified Data.Map as Map
+-- import qualified Data.Map as Map
 import           Data.Maybe (mapMaybe, catMaybes)
 import           Data.Traversable (for)
 
 import           Hedgehog.Internal.Config
 import           Hedgehog.Internal.Discovery (Pos(..), Position(..))
-import qualified Hedgehog.Internal.Discovery as Discovery
+-- import qualified Hedgehog.Internal.Discovery as Discovery
 import           Hedgehog.Internal.Prelude
 import           Hedgehog.Internal.Property (CoverCount(..), CoverPercentage(..))
 import           Hedgehog.Internal.Property (Coverage(..), Label(..), LabelName(..))
@@ -63,7 +63,7 @@ import           System.IO (hSetEncoding, stdout, stderr, utf8)
 #endif
 
 import           Text.PrettyPrint.Annotated.WL (Doc, (<#>), (<+>))
-import qualified Text.PrettyPrint.Annotated.WL as WL
+-- import qualified Text.PrettyPrint.Annotated.WL as WL
 import           Text.Printf (printf)
 
 ------------------------------------------------------------------------

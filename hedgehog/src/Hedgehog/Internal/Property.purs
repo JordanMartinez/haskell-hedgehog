@@ -105,7 +105,7 @@ import           Control.Monad.Base (MonadBase(..))
 import           Control.Monad.Catch (MonadThrow(..), MonadCatch(..))
 import           Control.Monad.Catch (SomeException(..), displayException)
 import           Control.Monad.Error.Class (MonadError(..))
-import qualified Control.Monad.Fail as Fail
+-- import qualified Control.Monad.Fail as Fail
 import           Control.Monad.IO.Class (MonadIO(..))
 import           Control.Monad.Morph (MFunctor(..))
 import           Control.Monad.Primitive (PrimMonad(..))
@@ -118,23 +118,23 @@ import           Control.Monad.Trans.Control (MonadBaseControl(..), MonadTransCo
 import           Control.Monad.Trans.Except (ExceptT(..), runExceptT)
 import           Control.Monad.Trans.Identity (IdentityT)
 import           Control.Monad.Trans.Maybe (MaybeT)
-import qualified Control.Monad.Trans.RWS.Lazy as Lazy
-import qualified Control.Monad.Trans.RWS.Strict as Strict
+-- import qualified Control.Monad.Trans.RWS.Lazy as Lazy
+-- import qualified Control.Monad.Trans.RWS.Strict as Strict
 import           Control.Monad.Trans.Reader (ReaderT)
 import           Control.Monad.Trans.Resource (MonadResource(..))
 import           Control.Monad.Trans.Resource (ResourceT)
-import qualified Control.Monad.Trans.State.Lazy as Lazy
-import qualified Control.Monad.Trans.State.Strict as Strict
-import qualified Control.Monad.Trans.Writer.Lazy as Lazy
-import qualified Control.Monad.Trans.Writer.Strict as Strict
+-- import qualified Control.Monad.Trans.State.Lazy as Lazy
+-- import qualified Control.Monad.Trans.State.Strict as Strict
+-- import qualified Control.Monad.Trans.Writer.Lazy as Lazy
+-- import qualified Control.Monad.Trans.Writer.Strict as Strict
 
-import qualified Data.Char as Char
+-- import qualified Data.Char as Char
 import           Data.Functor.Identity (Identity(..))
 import           Data.Int (Int64)
 import           Data.Map (Map)
-import qualified Data.Map.Strict as Map
+-- import qualified Data.Map.Strict as Map
 import           Data.Number.Erf (invnormcdf)
-import qualified Data.List as List
+-- import qualified Data.List as List
 import           Data.String (IsString)
 import           Data.Ratio ((%))
 import           Data.Typeable (typeOf)
@@ -142,7 +142,7 @@ import           Data.Typeable (typeOf)
 import           Hedgehog.Internal.Distributive
 import           Hedgehog.Internal.Exception
 import           Hedgehog.Internal.Gen (Gen, GenT)
-import qualified Hedgehog.Internal.Gen as Gen
+-- import qualified Hedgehog.Internal.Gen as Gen
 import           Hedgehog.Internal.Prelude
 import           Hedgehog.Internal.Show
 import           Hedgehog.Internal.Source
