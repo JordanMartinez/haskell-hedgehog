@@ -1,6 +1,6 @@
 module Hedgehog.Internal.Tree (
     Tree
-  , pattern Tree
+  -- , pattern Tree
   , TreeT(..)
   , runTree
   , mapTreeT
@@ -8,7 +8,7 @@ module Hedgehog.Internal.Tree (
   , treeChildren
 
   , Node
-  , pattern Node
+  -- , pattern Node
   , NodeT(..)
   , fromNodeT
 
@@ -70,11 +70,11 @@ type Tree =
 
 -- | Pattern to ease construction / deconstruction of pure trees.
 --
-pattern Tree :: NodeT Identity a -> Tree a
-pattern Tree node =
-  TreeT (Identity node)
-#if __GLASGOW_HASKELL__ >= 802
-#endif
+-- pattern Tree :: NodeT Identity a -> Tree a
+-- pattern Tree node =
+--   TreeT (Identity node)
+-- #if __GLASGOW_HASKELL__ >= 802
+-- #endif
 
 -- | An effectful tree, each node in the tree can have an effect before it is
 --   produced.
@@ -91,10 +91,10 @@ instance MonadBaseControl b m => MonadBaseControl b (TreeT m) where
 
 -- | A node in a rose tree.
 --
-type Node =
-  NodeT Identity
-#if __GLASGOW_HASKELL__ >= 802
-#endif
+-- type Node =
+--   NodeT Identity
+-- #if __GLASGOW_HASKELL__ >= 802
+-- #endif
 
 -- | Pattern to ease construction / deconstruction of pure nodes.
 --
