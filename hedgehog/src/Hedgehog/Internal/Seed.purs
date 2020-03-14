@@ -23,7 +23,7 @@
 -- 2. Nikos Baxevanis
 --    https://github.com/moodmosaic/SplitMix/blob/master/SplitMix.hs
 --
-#include "MachDeps.h"
+-- #include "MachDeps.h"
 
 module Hedgehog.Internal.Seed (
     Seed(..)
