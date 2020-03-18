@@ -316,7 +316,7 @@ dropSome ts = do
 shrinkOne :: forall m a. Monad m => List (NodeT m a) -> List (TreeT m (List a))
 shrinkOne ts = do
   {before: xs, focus: y0, after: zs} <- splits ts
-  y1 <- nodeChildren y0
+  y1 <- y0.children
   pure <<< TreeT $ do
     y2 <- runTreeT y1
     pure $
@@ -324,7 +324,7 @@ shrinkOne ts = do
 
 interleave :: forall m a. Monad m => List (NodeT m a) -> NodeT m (List a)
 interleave ts =
-  NodeT (map nodeValue ts) $
+  NodeT (map _.value ts) $
     concat [
         dropSome ts
       , shrinkOne ts
