@@ -33,27 +33,37 @@ module Hedgehog.Internal.Tree (
   ) where
 
 import Prelude
+
+import Control.Alt (class Alt, (<|>))
+import Control.Plus (class Plus, empty)
+import Control.Alternative (class Alternative)
 import Control.MonadPlus (class MonadPlus)
 -- import Control.Monad.Base (MonadBase(..))
 -- import Control.Monad.Trans.Control ()
-import Control.Monad.Error.Class (class MonadThrow, class MonadError)
-import Effect.Class (class MonadEffect)
-import Control.Monad.Morph (MFunctor(..), MMonad(..), generalize)
+import Control.Monad.Error.Class (class MonadThrow, class MonadError, throwError, catchError)
+import Effect.Class (class MonadEffect, liftEffect)
+import Effect.Aff.Class (class MonadAff, liftAff)
+import Control.Monad.Morph (class MFunctor, class MMonad, hoist, generalize)
 -- import Control.Monad.Primitive (PrimMonad(..))
-import Control.Monad.Reader.Class (class MonadAsk, class MonadReader)
-import Control.Monad.State.Class (class MonadState)
-import Control.Monad.Trans.Class (class MonadTrans)
-import Control.Monad.Maybe.Trans (MaybeT(..))
+import Control.Monad.Reader.Class (class MonadAsk, class MonadReader, ask, local)
+import Control.Monad.State.Class (class MonadState, state, get, put)
+import Control.Monad.Trans.Class (class MonadTrans, lift)
+import Control.Monad.Maybe.Trans (MaybeT(..), runMaybeT)
 -- import Control.Monad.Resource.Trans (class MonadResource)
-import Control.Monad.Writer.Class (class MonadTell, class MonadWriter)
+import Control.Monad.Writer.Class (class MonadTell, class MonadWriter, tell, listen, pass)
 -- import Control.Monad.Zip (MonadZip(..))
 
 import Data.Identity (Identity(..))
-import Data.Eq (class Eq1)
+import Data.Eq (class Eq1, eq1)
 -- import Data.Functor.Classes (Show1(..), showsPrec1)
 -- import Data.Functor.Classes (showsUnaryWith, showsBinaryWith)
+import Data.List (List(..), (:), length, takeWhile, concatMap, null)
 import Data.List as List
+import Data.Maybe (Maybe(..))
 import Data.Maybe as Maybe
+import Data.Tuple (Tuple(..))
+import Data.Foldable (class Foldable, foldMap)
+import Data.Traversable (class Traversable, traverse)
 
 import Hedgehog.Internal.Distributive
 -- import Control.Monad.Trans.Control (MonadBaseControl (..))
@@ -102,6 +112,9 @@ newtype NodeT m a =
     , children :: List (TreeT m a)
     }
 derive newtype instance eqNodeT :: (Eq a) => Eq (NodeT m a)
+
+runTreeT :: forall m a. TreeT m a -> m (NodeT m a)
+runTreeT (TreeT ma) = ma
 
 -- | Extracts the 'Node' from a 'Tree'.
 runTree :: forall a. Tree a -> Node a
@@ -194,14 +207,14 @@ catMaybes m =
         Just <<< Tree $
           NodeT {value: x, children: Maybe.mapMaybe catMaybes mxs }
 
-fromPred :: forall a. (a -> Bool) -> a -> Maybe a
+fromPred :: forall a. (a -> Boolean) -> a -> Maybe a
 fromPred p a = a <$ guard (p a)
 
 -- | Returns a tree containing only elements that match the predicate.
 -- |
 -- | If the root of the tree does not match the predicate then 'Nothing' is
 -- | returned.
-filter :: forall a. (a -> Bool) -> Tree a -> Maybe (Tree a)
+filter :: forall a. (a -> Boolean) -> Tree a -> Maybe (Tree a)
 filter p = mapMaybe (fromPred p)
 
 mapMaybe :: forall a. (a -> Maybe b) -> Tree a -> Maybe (Tree b)
@@ -218,7 +231,7 @@ runTreeMaybeT = runMaybeT <<< distributeT
 -- |
 -- | If the root of the tree does not match the predicate then 'Nothing' is
 -- | returned.
-filterMaybeT :: forall a. (a -> Bool) -> TreeT (MaybeT Identity) a -> TreeT (MaybeT Identity) a
+filterMaybeT :: forall a. (a -> Boolean) -> TreeT (MaybeT Identity) a -> TreeT (MaybeT Identity) a
 filterMaybeT p = mapMaybeMaybeT (fromPred p)
 
 mapMaybeMaybeT :: forall a b. (a -> Maybe b) -> TreeT (MaybeT Identity) a -> TreeT (MaybeT Identity) b
@@ -253,7 +266,7 @@ flattenTree p (TreeT (Identity (NodeT {value: mx, children: mxs0}))) =
 -- |
 -- | When an element does not match the predicate its node is replaced with
 -- | 'empty'.
-filterT :: forall m a. Monad m => Alternative m => (a -> Bool) -> TreeT m a -> TreeT m a
+filterT :: forall m a. Monad m => Alternative m => (a -> Boolean) -> TreeT m a -> TreeT m a
 filterT p =
   mapMaybeT (fromPred p)
 
@@ -298,10 +311,10 @@ splits xs0 =
 -- | > removes 3 [1..5] == [[4,5],[1,2,3]]
 -- |
 -- Note that the last chunk we delete might have fewer elements than `n`.
-removes :: forall a. Int -> List a -> List (List a))
+removes :: forall a. Int -> List a -> List (List a)
 removes k = \xs -> go xs
   where
-    go :: List a -> List (List a))
+    go :: List a -> List (List a)
     go Nil = Nil
     go xs = xs2 : map (\list -> xs1 <|> list) (go xs2)
       where
@@ -320,7 +333,7 @@ shrinkOne ts = do
   pure <<< TreeT $ do
     y2 <- runTreeT y1
     pure $
-      interleave (xs <|> (y2 `cons` zs))
+      interleave (xs <|> (y2 : zs))
 
 interleave :: forall m a. Monad m => List (NodeT m a) -> NodeT m (List a)
 interleave ts =
@@ -337,26 +350,27 @@ instance foldableTree :: Foldable (TreeT Identity) where
     foldMap f (runIdentity mx)
 
 instance foldableNode :: Foldable (NodeT Identity) where
-  foldMap f (NodeT x xs) =
-    f x `mappend` mconcat (map (foldMap f) xs)
+  foldMap f (NodeT {value: x, children: xs}) =
+    f x `append` mconcat (map (foldMap f) xs)
 
 instance traversableTreeT :: Traversable (TreeT Identity) where
   traverse f (TreeT mx) =
     TreeT <$> traverse (traverse f) mx
 
 instance traversableNodeT :: Traversable (NodeT Identity) where
-  traverse f (NodeT x xs) =
+  traverse f (NodeT {value: x, children: xs}) =
     NodeT <$> f x <*> traverse (traverse f) xs
 
 ------------------------------------------------------------------------
 -- NodeT/TreeT instances
 
 instance eqTreeT :: (Eq1 m, Eq a) => Eq (TreeT m a) where
-  TreeT m0 == TreeT m1 =
-    liftEq (==) m0 m1
+  eq (TreeT m0) (TreeT m1) = eq1 m0 m1
+
+  notEq = not <<< eq
 
 instance functorNodeT :: Functor m => Functor (NodeT m) where
-  map f (NodeT x xs) =
+  map f (NodeT {value: x, children: xs}) =
     NodeT (f x) (map (map f) xs)
 
 instance functorTreeT :: Functor m => Functor (TreeT m) where
@@ -364,9 +378,10 @@ instance functorTreeT :: Functor m => Functor (TreeT m) where
     TreeT <<< map (map f) <<< runTreeT
 
 instance applyNodeT :: Apply m => Apply (NodeT m) where
-  apply (NodeT ab tabs) na`(NodeT a tas) =
-    NodeT (ab a) $
-      map (<*> (fromNodeT na)) tabs ++ map (map ab) tas
+  apply (NodeT {value: ab, children: tabs}) na@(NodeT {value: a, children: tas}) =
+    NodeT { value: ab a
+          , children: map (_ <*> (fromNodeT na)) tabs ++ map (map ab) tas
+          }
 
 instance applyTreeT :: Apply m => Apply (TreeT m) where
   apply (TreeT mab) (TreeT ma) =
@@ -374,25 +389,25 @@ instance applyTreeT :: Apply m => Apply (TreeT m) where
       liftA2 (<*>) mab ma
 
 instance applicativeNodeT :: Applicative m => Applicative (NodeT m) where
-  pure x = NodeT x Nil
+  pure x = NodeT {value: x, children: Nil}
 
 instance applicativeTreeT :: Applicative m => Applicative (TreeT m) where
   pure = TreeT <<< pure <<< pure
 
 instance monadNodeT :: Monad m => Monad (NodeT m) where
-  bind (NodeT x xs) k =
+  bind (NodeT {value: x, children: xs}) k =
     case k x of
-      NodeT y ys ->
-        NodeT y $
-map (TreeT <<< map (>>= k) <<< runTreeT) xs <|> ys
+      NodeT {value: y, children: ys} ->
+        NodeT {value: y
+              , children: map (TreeT <<< map (_ >>= k) <<< runTreeT) xs <|> ys
+              }
 
 instance bindTreeT :: Bind m => Bind (TreeT m) where
   bind m k =
     TreeT $ do
-      NodeT x xs <- runTreeT m
-      NodeT y ys <- runTreeT (k x)
-      pure <<< NodeT y $
-        map (_ >>= k) xs <|> ys
+      NodeT {value: x, children: xs} <- runTreeT m
+      NodeT {value: y, children: ys} <- runTreeT (k x)
+      pure $ NodeT {value: y, children: map (_ >>= k) xs <|> ys }
 
 instance monadNodeT :: Monad m => Monad (NodeT m)
 
@@ -406,22 +421,21 @@ instance plusTreeT :: Plus m => Plus (TreeT m) where
 
 instance alternativeTreeT :: Alternative m => Alternative (TreeT m)
 
-instance monadZeroTreeT :: MonadZero m => MonadZero (TreeT m) where
-  mzero = TreeT mzero
+instance monadZeroTreeT :: MonadZero m => MonadZero (TreeT m)
 
-instance monadPlusTreeT :: MonadPlus m => MonadPlus (TreeT m) where
-  mplus x y = TreeT (runTreeT x `mplus` runTreeT y)
+instance monadPlusTreeT :: MonadPlus m => MonadPlus (TreeT m)
 
 zipTreeT :: forall f a b. Applicative f => TreeT f a -> TreeT f b -> TreeT f (Tuple a b)
-zipTreeT l0`(TreeT left) r0@(TreeT right) =
+zipTreeT l0@(TreeT left) r0@(TreeT right) =
   TreeT $
     let
-      zipNodeT :: NodeT f a -> NodeT f b -> NodeT f (a, b)
-      zipNodeT (NodeT a ls) (NodeT b rs) =
-        NodeT (Tuple a b) $
-          concat [ (bind ls (\l1 -> zipTreeT l1 r0))
-                 , (bind rs (\r1 -> zipTreeT l0 r1))
-                 ]
+      zipNodeT :: NodeT f a -> NodeT f b -> NodeT f (Tuple a b)
+      zipNodeT (NodeT {value:a, children: ls}) (NodeT {value: b, children: rs}) =
+        NodeT { value: Tuple a b
+              , children: concat [ (bind ls (\l1 -> zipTreeT l1 r0))
+                                 , (bind rs (\r1 -> zipTreeT l0 r1))
+                                 ]
+              }
     in
       zipNodeT <$> left <*> right
 
@@ -436,15 +450,15 @@ instance monadTransTreeT :: MonadTrans TreeT where
 
 instance mFunctorNodeT :: MFunctor NodeT where
   hoist f (NodeT x xs) =
-    NodeT x (map (hoist f) xs)
+    NodeT {value: x, children: map (hoist f) xs }
 
 instance mFunctorTreeT :: MFunctor TreeT where
   hoist f (TreeT m) =
     TreeT <<< f $ map (hoist f) m
 
 embedNodeT :: forall m t b. Monad m => (t (NodeT t b) -> TreeT m (NodeT t b)) -> NodeT t b -> NodeT m b
-embedNodeT f (NodeT x xs) =
-  NodeT x (map (embedTreeT f) xs)
+embedNodeT f (NodeT {value: x, children: xs}) =
+  NodeT {value: x, children: map (embedTreeT f) xs}
 
 embedTreeT :: forall m t b. Monad m => (t (NodeT t b) -> TreeT m (NodeT t b)) -> TreeT t b -> TreeT m b
 embedTreeT f (TreeT m) =
@@ -453,18 +467,18 @@ embedTreeT f (TreeT m) =
 instance mMonadTreeT :: MMonad TreeT where
   embed f m = embedTreeT f m
 
-distributeNodeT :: forall t m a. Transformer t TreeT m => NodeT (t m) a -> t (TreeT m) a
-distributeNodeT (NodeT x xs) =
-  join <<< lift <<< fromNodeT <<< NodeT (pure x) $
-    map (pure <<< distributeTreeT) xs
+distributeNodeT :: forall t m a. Monad m => Monad (t m) => Monad (TreeT m) => Monad (t (TreeT m)) => MonadTrans t => MFunctor t => NodeT (t m) a -> t (TreeT m) a
+distributeNodeT (NodeT {value: x, children: xs}) =
+  join <<< lift <<< fromNodeT <<<
+    NodeT { value: pure x
+          , children: map (pure <<< distributeTreeT) xs
+          }
 
-distributeTreeT :: forall t m a. Transformer t TreeT m => TreeT (t m) a -> t (TreeT m) a
-distributeTreeT x =
-  distributeNodeT =<< hoist lift (runTreeT x)
+distributeTreeT :: forall t m a. Monad m => Monad (t m) => Monad (TreeT m) => Monad (t (TreeT m)) => MonadTrans t => MFunctor t => TreeT (t m) a -> t (TreeT m) a
+distributeTreeT x = distributeNodeT =<< hoist lift (runTreeT x)
 
 instance monadTransDistributiveTreeT :: MonadTransDistributive TreeT where
-  distributeT =
-    distributeTreeT
+  distributeT = distributeTreeT
 
 -- PureScript doesn't have this type class and won't in the future AFAIK
 -- instance PrimMonad m => PrimMonad (TreeT m) where
@@ -473,36 +487,34 @@ instance monadTransDistributiveTreeT :: MonadTransDistributive TreeT where
 --   primitive =
 --     lift <<< primitive
 
-instance MonadEffect m => MonadEffect (TreeT m) where
+instance monadEffectTreeT :: MonadEffect m => MonadEffect (TreeT m) where
   liftEffect = lift <<< liftEffect
 
-instance MonadAff m => MonadAff (TreeT m) where
+instance monadAffTreeT :: MonadAff m => MonadAff (TreeT m) where
   liftAff = lift <<< liftAff
 
 -- instance MonadBase b m => MonadBase b (TreeT m) where
 --   liftBase =
 --     lift <<< liftBase
 
-instance MonadThrow m => MonadThrow (TreeT m) where
-  throwM = lift <<< throwM
+instance monadThrowTreeT :: MonadThrow m => MonadThrow (TreeT m) where
+  throwError = lift <<< throwError
 
-handleNodeT :: forall e m a. MonadCatch e m => (e -> TreeT m a) -> NodeT m a -> NodeT m a
-handleNodeT onErr (NodeT x xs) =
-  NodeT x $
-    map (handleTreeT onErr) xs
+handleNodeT :: forall e m a. MonadError e m => (e -> TreeT m a) -> NodeT m a -> NodeT m a
+handleNodeT onErr (NodeT {value: x, children: xs}) =
+  NodeT { value: x, children: map (handleTreeT onErr) xs }
 
-handleTreeT :: forall e m a. MonadCatch e m => (e -> TreeT m a) -> TreeT m a -> TreeT m a
+handleTreeT :: forall e m a. MonadError e m => (e -> TreeT m a) -> TreeT m a -> TreeT m a
 handleTreeT onErr m =
   TreeT <<< map (handleNodeT onErr) $
-    catch (runTreeT m) (runTreeT <<< onErr)
+    catchError (runTreeT m) (runTreeT <<< onErr)
 
-instance monadCatchTreeT :: MonadCatch m => MonadCatch (TreeT m) where
-  catch = flip handleTreeT
+instance monadErrorTreeT :: MonadError m => MonadError (TreeT m) where
+  catchError = flip handleTreeT
 
 localNodeT :: forall r m a. MonadReader r m => (r -> r) -> NodeT m a -> NodeT m a
-localNodeT f (NodeT x xs) =
-  NodeT x $
-    map (localTreeT f) xs
+localNodeT f (NodeT {value: x, children: xs}) =
+  NodeT {value: x, children: map (localTreeT f) xs }
 
 localTreeT :: forall r m a. MonadReader r m => (r -> r) -> TreeT m a -> TreeT m a
 localTreeT f (TreeT m) =
@@ -519,21 +531,19 @@ instance monadStateTreeT :: MonadState s m => MonadState s (TreeT m) where
   state = lift <<< state
 
 listenNodeT :: forall w m a. MonadWriter w m => w -> NodeT m a -> NodeT m (Tuple a w)
-listenNodeT w (NodeT x xs) =
-  NodeT (x, w) $
-    map (listenTreeT w) xs
+listenNodeT w (NodeT {value: x, children: xs}) =
+  NodeT { value: (Tuple x w), children: map (listenTreeT w) xs }
 
 listenTreeT :: forall w m a. MonadWriter w m => w -> TreeT m a -> TreeT m (Tuple a w)
 listenTreeT w0 (TreeT m) =
   TreeT $ do
-    (x, w) <- listen m
-    pure $ listenNodeT (mappend w0 w) x
+    Tuple x w <- listen m
+    pure $ listenNodeT (append w0 w) x
 
 -- FIXME This just throws away the writer modification function.
 passNodeT :: forall w m a. MonadWriter w m => NodeT m (Tuple a (w -> w)) -> NodeT m a
-passNodeT (NodeT (x, _) xs) =
-  NodeT x $
-    map passTreeT xs
+passNodeT (NodeT {value: (Tuple x _), children: xs}) =
+  NodeT { value: x, children: map passTreeT xs }
 
 passTreeT :: forall w m a. MonadWriter w m => TreeT m (Tuple a (w -> w)) -> TreeT m a
 passTreeT (TreeT m) =
@@ -548,9 +558,8 @@ instance monadWriterTreeT :: MonadWriter w m => MonadWriter w (TreeT m) where
   pass = passTreeT
 
 handleErrorNodeT :: forall e m a. MonadError e m => (e -> TreeT m a) -> NodeT m a -> NodeT m a
-handleErrorNodeT onErr (NodeT x xs) =
-  NodeT x $
-    map (handleErrorTreeT onErr) xs
+handleErrorNodeT onErr (NodeT {value: x, children: xs}) =
+  NodeT {value: x, children: map (handleErrorTreeT onErr) xs }
 
 handleErrorTreeT :: forall e m a. MonadError e m => (e -> TreeT m a) -> TreeT m a -> TreeT m a
 handleErrorTreeT onErr m =
@@ -613,7 +622,7 @@ instance showTreeT :: (Show (m a), Show a) => Show (TreeT m a) where
 
 renderTreeTLines :: forall m. Monad m => TreeT m String -> m (List String)
 renderTreeTLines (TreeT m) = do
-  NodeT x xs0 <- m
+  NodeT {value: x, children: xs0} <- m
   xs <- renderForestLines xs0
   pure $
     lines (renderNodeT x) <|> xs
@@ -636,13 +645,13 @@ renderForestLines xs0 =
       Cons x Nil -> do
         s <- renderTreeTLines x
         pure $
-shift " └╼" "   " s
+          shift " └╼" "   " s
 
       Cons x xs -> do
         s <- renderTreeTLines x
         ss <- renderForestLines xs
         pure $
-shift " ├╼" " │ " s ++ ss
+          shift " ├╼" " │ " s ++ ss
 
 -- | Render a tree of strings.
 render :: Tree String -> String
@@ -653,3 +662,6 @@ render = runIdentity <<< renderT
 renderT :: forall m. Monad m => TreeT m String -> m String
 renderT =
   map unlines <<< renderTreeTLines
+
+runIdentity :: forall a. Identity a -> a
+runIdentity (Identity a) = a
