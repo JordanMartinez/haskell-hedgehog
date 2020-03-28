@@ -201,12 +201,12 @@ import           Hedgehog.Internal.Tree (Tree, TreeT(..), NodeT(..))
 import           Hedgehog.Range (Size, Range)
 -- import qualified Hedgehog.Range as Range
 
-#if __GLASGOW_HASKELL__ < 808
+-- #if __GLASGOW_HASKELL__ < 808
 -- import qualified Control.Monad.Fail as Fail
-#endif
-#if __GLASGOW_HASKELL__ < 806
-import           Data.Coerce (coerce)
-#endif
+-- #endif
+-- #if __GLASGOW_HASKELL__ < 806
+-- import           Data.Coerce (coerce)
+-- #endif
 
 ------------------------------------------------------------------------
 -- Generator transformer
