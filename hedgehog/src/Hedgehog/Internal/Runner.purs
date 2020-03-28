@@ -44,52 +44,56 @@ import           Hedgehog.Range (Size)
 
 import           Language.Haskell.TH.Syntax (Lift)
 
-#if mingw32_HOST_OS
+-- #if mingw32_HOST_OS
 import           System.IO (hSetEncoding, stdout, stderr, utf8)
-#endif
+-- #endif
 
 -- | Configuration for a property test run.
 --
-data RunnerConfig =
+newtype RunnerConfig =
   RunnerConfig {
       -- | The number of property tests to run concurrently. 'Nothing' means
       --   use one worker per processor.
-      runnerWorkers :: !(Maybe WorkerCount)
+      workers :: Maybe WorkerCount
 
       -- | Whether to use colored output or not. 'Nothing' means detect from
       --   the environment.
-    , runnerColor :: !(Maybe UseColor)
+    , color :: Maybe UseColor
 
       -- | How verbose to be in the runner output. 'Nothing' means detect from
       --   the environment.
-    , runnerVerbosity :: !(Maybe Verbosity)
-    } deriving (Eq, Ord, Show, Lift)
+    , verbosity :: Maybe Verbosity
+    }
+derive newtype instance eqRunnerConfig :: Eq RunnerConfig
+derive newtype instance ordRunnerConfig :: Ord RunnerConfig
+derive newtype instance showRunnerConfig :: Show RunnerConfig
+-- TODO: Lift
 
-findM :: Monad m => [a] -> b -> (a -> m (Maybe b)) -> m b
+findM :: forall m a b. Monad m => List a -> b -> (a -> m (Maybe b)) -> m b
 findM xs0 def p =
   case xs0 of
-    [] ->
-      return def
-    x0 : xs ->
+    Nil ->
+      pure def
+    Cons x0 xs ->
       p x0 >>= \m ->
         case m of
           Nothing ->
             findM xs def p
           Just x ->
-            return x
+            pure x
 
-isFailure :: NodeT m (Maybe (Either x a, b)) -> Bool
+isFailure :: forall m x a b. NodeT m (Maybe (Either x a, b)) -> Bool
 isFailure = case _ of
   NodeT (Just (Left _, _)) _ ->
     True
   _ ->
     False
 
-isSuccess :: NodeT m (Maybe (Either x a, b)) -> Bool
+isSuccess :: forall m x a b. NodeT m (Maybe (Either x a, b)) -> Bool
 isSuccess =
   not <<< isFailure
 
-runTreeN ::
+runTreeN :: forall m x a b.
      Monad m
   => ShrinkRetries
   -> TreeT m (Maybe (Either x a, b))
@@ -101,21 +105,21 @@ runTreeN n m = do
   else
     pure o
 
-takeSmallest ::
+takeSmallest :: forall m.
      MonadIO m
   => Size
   -> Seed
   -> ShrinkCount
   -> ShrinkLimit
   -> ShrinkRetries
-  -> (Progress -> m ())
-  -> NodeT m (Maybe (Either Failure (), Journal))
+  -> (Progress -> m Unit)
+  -> NodeT m (Maybe (Either Failure Unit, Journal))
   -> m Result
 takeSmallest size seed shrinks slimit retries updateUI = case _ of
   NodeT Nothing _ ->
     pure GaveUp
 
-  NodeT (Just (x, (Journal logs))) xs ->
+  NodeT (Just (Tuple x (Journal logs))) xs ->
     case x of
       Left (Failure loc err mdiff) -> do
         let
@@ -133,10 +137,10 @@ takeSmallest size seed shrinks slimit retries updateUI = case _ of
             if isFailure o then
               Just <$> takeSmallest size seed (shrinks + 1) slimit retries updateUI o
             else
-              return Nothing
+              pure Nothing
 
-      Right () ->
-        return OK
+      _ ->
+        pure OK
 
 checkReport ::
      forall m.
@@ -145,8 +149,8 @@ checkReport ::
   => PropertyConfig
   -> Size
   -> Seed
-  -> PropertyT m ()
-  -> (Report Progress -> m ())
+  -> PropertyT m Unit
+  -> (Report Progress -> m Unit)
   -> m (Report Result)
 checkReport cfg size0 seed0 test0 updateUI =
   let
@@ -156,7 +160,7 @@ checkReport cfg size0 seed0 test0 updateUI =
     terminationCriteria =
       propertyTerminationCriteria cfg
 
-    (confidence, minTests) =
+    Tuple confidence minTests) =
       case terminationCriteria of
         EarlyTermination c t -> (Just c, t)
         NoEarlyTermination c t -> (Just c, t)
@@ -177,14 +181,14 @@ checkReport cfg size0 seed0 test0 updateUI =
       count `mod` 100 == 0 &&
       maybe False (\c -> confidenceFailure count c coverage) confidence
 
-    loop ::
+    loop :: forall m.
          TestCount
       -> DiscardCount
       -> Size
       -> Seed
       -> Coverage CoverCount
       -> m (Report Result)
-    loop !tests !discards !size !seed !coverage0 = do
+    loop tests discards size seed coverage0 = do
       updateUI $ Report tests discards coverage0 Running
 
       let
@@ -253,14 +257,14 @@ checkReport cfg size0 seed0 test0 updateUI =
 
       else
         case Seed.split seed of
-          (s0, s1) -> do
+          Tuple s0 s1 -> do
             node@(NodeT x _) <-
               runTreeT <<< evalGenT size s0 <<< runTestT $ unPropertyT test
             case x of
               Nothing ->
                 loop tests (discards + 1) (size + 1) s1 coverage0
 
-              Just (Left _, _) ->
+              Just (Tuple (Left _) _) ->
                 let
                   mkReport =
                     Report (tests + 1) discards coverage0
@@ -275,7 +279,7 @@ checkReport cfg size0 seed0 test0 updateUI =
                       (updateUI <<< mkReport)
                       node
 
-              Just (Right (), journal) ->
+              Just (Tuple (Right _), journal) ->
                 let
                   coverage =
                     journalCoverage journal <> coverage0
@@ -284,7 +288,7 @@ checkReport cfg size0 seed0 test0 updateUI =
   in
     loop 0 0 size0 seed0 mempty
 
-checkRegion ::
+checkRegion :: forall m.
      MonadIO m
   => Region
   -> UseColor
@@ -315,7 +319,7 @@ checkRegion region color name size seed prop =
 
     pure result
 
-checkNamed ::
+checkNamed :: forall m.
      MonadIO m
   => Region
   -> UseColor
@@ -336,7 +340,7 @@ check prop = do
 
 -- | Check a property using a specific size and seed.
 --
-recheck :: forall m. MonadEffect m => Size -> Seed -> Property -> m ()
+recheck :: forall m. MonadEffect m => Size -> Seed -> Property -> m Unit
 recheck size seed prop0 = do
   color <- detectColor
   let prop = withTests 1 prop0
@@ -355,12 +359,12 @@ checkGroup config (Group group props) =
     -- our tests will saturate all the capabilities they're given.
     updateNumCapabilities (n + 2)
 
-#if mingw32_HOST_OS
-    hSetEncoding stdout utf8
-    hSetEncoding stderr utf8
-#endif
 
-    putStrLn $ "━━━ " ++ unGroupName group ++ " ━━━"
+    -- #if mingw32_HOST_OS
+    --   hSetEncoding stdout utf8
+    --   hSetEncoding stderr utf8
+    --   #endif
+    putStrLn $ "━━━ " <> unGroupName group <> " ━━━"
 
     verbosity <- resolveVerbosity (runnerVerbosity config)
     color <- resolveColor (runnerColor config)
@@ -370,7 +374,7 @@ checkGroup config (Group group props) =
       summaryFailed summary == 0 &&
       summaryGaveUp summary == 0
 
-updateSummary :: Region -> TVar Summary -> UseColor -> (Summary -> Summary) -> IO ()
+updateSummary :: Region -> TVar Summary -> UseColor -> (Summary -> Summary) -> IO Unit
 updateSummary sregion svar color f = do
   summary <- atomically (TVar.modifyTVar' svar f >> TVar.readTVar svar)
   setRegion sregion =<< renderSummary color summary
@@ -379,14 +383,14 @@ checkGroupWith ::
      WorkerCount
   -> Verbosity
   -> UseColor
-  -> [(PropertyName, Property)]
+  -> List (Tuple PropertyName Property)
   -> IO Summary
 checkGroupWith n verbosity color props =
   displayRegion $ \sregion -> do
     svar <- atomically <<< TVar.newTVar $ mempty { summaryWaiting = PropertyCount (length props) }
 
     let
-      start (TasksRemaining tasks) _ix (name, prop) =
+      start (TasksRemaining tasks) _ix (Tuple name prop) =
         liftEffect $ do
           updateSummary sregion svar color $ \x -> x {
               summaryWaiting =
@@ -447,14 +451,11 @@ checkGroupWith n verbosity color props =
 checkSequential :: forall m. MonadEffect m => Group -> m Bool
 checkSequential =
   checkGroup
-    RunnerConfig {
-        runnerWorkers =
-          Just 1
-      , runnerColor =
-          Nothing
-      , runnerVerbosity =
-          Nothing
-      }
+    (RunnerConfig
+      { workers = Just 1
+      , color = Nothing
+      , verbosity = Nothing
+      })
 
 -- | Check a group of properties in parallel.
 --
@@ -481,11 +482,8 @@ checkSequential =
 checkParallel :: forall m. MonadEffect m => Group -> m Bool
 checkParallel =
   checkGroup
-    RunnerConfig {
-        runnerWorkers =
-          Nothing
-      , runnerColor =
-          Nothing
-      , runnerVerbosity =
-          Nothing
-      }
+    (RunnerConfig
+      { workers = Nothing
+      , color = Nothing
+      , verbosity = Nothing
+      })
