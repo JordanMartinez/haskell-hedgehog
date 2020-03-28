@@ -25,25 +25,22 @@ data Body =
   | Open ConsoleRegion
   | Closed
 
-newtype Region =
-  Region {
-      unRegion :: TVar Body
-    }
+newtype Region = Region (TVar Body)
 
-newEmptyRegion :: LiftRegion m => m Region
+newEmptyRegion :: forall m. LiftRegion m => m Region
 newEmptyRegion =
   liftRegion $ do
     ref <- TVar.newTVar Empty
     pure $ Region ref
 
-newOpenRegion :: LiftRegion m => m Region
+newOpenRegion :: forall m. LiftRegion m => m Region
 newOpenRegion =
   liftRegion $ do
     region <- Console.openConsoleRegion Linear
     ref <- TVar.newTVar $ Open region
     pure $ Region ref
 
-openRegion :: LiftRegion m => Region -> String -> m ()
+openRegion :: forall m. LiftRegion m => Region -> String -> m Unit
 openRegion (Region var) content =
   liftRegion $ do
     body <- TVar.readTVar var
@@ -57,23 +54,23 @@ openRegion (Region var) content =
         Console.setConsoleRegion region content
 
       Closed ->
-        pure ()
+        pure unit
 
-setRegion :: LiftRegion m => Region -> String -> m ()
+setRegion :: forall m. LiftRegion m => Region -> String -> m Unit
 setRegion (Region var) content =
   liftRegion $ do
     body <- TVar.readTVar var
     case body of
       Empty ->
-        pure ()
+        pure unit
 
       Open region ->
         Console.setConsoleRegion region content
 
       Closed ->
-        pure ()
+        pure unit
 
-displayRegions :: (MonadIO m, MonadMask m) => m a -> m a
+displayRegions :: forall m. MonadIO m => MonadMask m => m a -> m a
 displayRegions io =
   Console.displayConsoleRegions io
 
@@ -86,19 +83,19 @@ displayRegion ::
 displayRegion =
   displayRegions <<<$1bracket newOpenRegion finishRegion
 
-moveToBottom :: Region -> STM ()
+moveToBottom :: Region -> STM Unit
 moveToBottom (Region var) =
   liftRegion $ do
     body <- TVar.readTVar var
     case body of
       Empty ->
-        pure ()
+        pure unit
 
       Open region -> do
         mxs <- TMVar.tryTakeTMVar Console.regionList
         case mxs of
           Nothing ->
-            pure ()
+            pure unit
 
           Just xs0 ->
             let
@@ -108,9 +105,9 @@ moveToBottom (Region var) =
               TMVar.putTMVar Console.regionList (region : xs1)
 
       Closed ->
-        pure ()
+        pure unit
 
-finishRegion :: LiftRegion m => Region -> m ()
+finishRegion :: forall m. LiftRegion m => Region -> m Unit
 finishRegion (Region var) =
   liftRegion $ do
     body <- TVar.readTVar var
@@ -124,4 +121,4 @@ finishRegion (Region var) =
         TVar.writeTVar var Closed
 
       Closed ->
-        pure ()
+        pure unit
