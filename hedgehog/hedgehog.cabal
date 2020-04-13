@@ -83,7 +83,7 @@ library
     ghc-options: -Wnoncanonical-monad-instances
 
   hs-source-dirs:
-    src
+    oldSrc
 
   exposed-modules:
     Hedgehog
@@ -125,7 +125,7 @@ test-suite test
     -Wall -threaded -O2
 
   hs-source-dirs:
-    test
+    oldTest
 
   other-modules:
     Test.Hedgehog.Applicative
