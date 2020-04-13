@@ -5,3 +5,8 @@ dist/
 dist-newstyle/
 .ghc.environment.*
 .stack-work/
+
+**/.psc*
+**/.spago
+**/node_modules
+**/generated-docs
