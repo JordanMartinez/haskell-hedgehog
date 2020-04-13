@@ -123,6 +123,12 @@ let upstream =
 
 let overrides = {=}
 
-let additions = {=}
+let additions =
+  { mmorph =
+    { dependencies = [ "free", "functors", "psci-support", "transformers" ]
+    , repo = "https://github.com/Thimoteus/purescript-mmorph.git"
+    , version = "v5.1.0"
+    }
+  }
 
 in  upstream // overrides // additions

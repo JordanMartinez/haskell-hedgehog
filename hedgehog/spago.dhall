@@ -9,6 +9,7 @@ You can edit this file as you like.
   , "enums"
   , "generics-rep"
   , "integers"
+  , "mmorph"
   , "node-process"
   , "psci-support"
   , "transformers"
