@@ -10,3 +10,10 @@ dist-newstyle/
 **/.spago
 **/node_modules
 **/generated-docs
+**/bower_components/
+**/.pulp-cache/
+**/output/
+**/.psc-package/
+**/.psc*
+**/.purs*
+**/.psa*
