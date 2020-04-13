@@ -17,3 +17,5 @@ dist-newstyle/
 **/.psc*
 **/.purs*
 **/.psa*
+
+tmp/
