@@ -4,7 +4,8 @@ You can edit this file as you like.
 -}
 { name = "my-project"
 , dependencies =
-  [ "console"
+  [ "aff"
+  , "console"
   , "effect"
   , "enums"
   , "generics-rep"
@@ -12,6 +13,7 @@ You can edit this file as you like.
   , "mmorph"
   , "node-process"
   , "psci-support"
+  , "stringutils"
   , "transformers"
   ]
 , packages = ./packages.dhall
